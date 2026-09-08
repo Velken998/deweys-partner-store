@@ -1,0 +1,4342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Store Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #16100c;
+    --panel: #241a14;
+    --panel-alt: #2c1f17;
+    --ink: #f3e7d7;
+    --ink-soft: #b6a189;
+    --line: #43301e;
+    --accent: #cf7a3c;
+    --accent-soft: #e2985c;
+    --gold: #e3b64f;
+    --danger: #b3404a;
+    --danger-soft: #c85662;
+    --input-bg: #1e1610;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    padding: 24px 16px 80px;
+  }
+
+  header {
+    max-width: 760px;
+    margin: 0 auto 28px;
+    text-align: center;
+    position: relative;
+    padding-top: 8px;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    height: 160px;
+    background: radial-gradient(ellipse at center, rgba(207,122,60,0.16), transparent 70%);
+    pointer-events: none;
+  }
+
+  .star-mark {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 6px rgba(227,182,79,0.45));
+  }
+
+  header .eyebrow {
+    font-family: 'Public Sans', sans-serif;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: 32px;
+    margin: 0 0 6px;
+    color: var(--accent);
+    letter-spacing: 0.01em;
+  }
+
+  header p {
+    font-family: 'Public Sans', sans-serif;
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  form {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .category {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: linear-gradient(120deg, rgba(207,122,60,0.10), rgba(0,0,0,0) 65%), var(--panel-alt);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .category-header h2 {
+    font-size: 16px;
+    margin: 0;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .category-header .count {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 3px 10px;
+  }
+
+  .items {
+    padding: 6px 18px 12px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    gap: 14px;
+  }
+
+  .item-row:last-child {
+    border-bottom: none;
+  }
+
+  .item-name {
+    font-size: 15px;
+  }
+
+  .qty-input {
+    width: 70px;
+    padding: 8px 10px;
+    font-size: 15px;
+    text-align: center;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--input-bg);
+    font-family: 'Public Sans', sans-serif;
+    color: var(--ink);
+  }
+
+  .qty-input:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+
+  .submit-bar {
+    max-width: 760px;
+    margin: 24px auto 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  button[type="submit"] {
+    font-family: 'Public Sans', sans-serif;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px 40px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button[type="submit"]:hover {
+    background: var(--accent-soft);
+  }
+
+  button[type="submit"]:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  #summary {
+    max-width: 760px;
+    margin: 24px auto 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 22px;
+    display: none;
+  }
+
+  #summary h2 {
+    color: var(--accent);
+    font-size: 18px;
+    margin-top: 0;
+  }
+
+  #summary ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  #summary li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    font-family: 'Public Sans', sans-serif;
+  }
+
+  #summary .cat-label {
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    margin-top: 14px;
+    display: block;
+  }
+
+  #summary .total-line {
+    margin-top: 14px;
+    font-weight: 700;
+    font-family: 'Public Sans', sans-serif;
+    color: var(--accent);
+    font-size: 15px;
+  }
+
+  #summary .empty-note {
+    color: var(--ink-soft);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 24px; }
+    .qty-input { width: 60px; }
+  }
+
+  .manager-link {
+    margin-top: 14px;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  .manager-link:hover {
+    border-color: var(--gold);
+    color: var(--accent);
+  }
+
+  .store-name-row {
+    align-items: center;
+  }
+
+  .store-name-input {
+    width: 240px;
+    max-width: 55%;
+    padding: 9px 12px;
+    font-size: 15px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--input-bg);
+    font-family: 'Public Sans', sans-serif;
+    color: var(--ink);
+  }
+
+  .store-name-input:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+
+  /* Manager password overlay */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 5, 3, 0.72);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+
+  .overlay.active {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px 26px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  }
+
+  .modal h2 {
+    margin: 0 0 6px;
+    color: var(--accent);
+    font-size: 19px;
+  }
+
+  .modal-note {
+    font-family: 'Public Sans', sans-serif;
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin: 0 0 14px;
+  }
+
+  .modal .store-name-input {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 8px;
+  }
+
+  .modal-error {
+    color: var(--danger-soft);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    min-height: 18px;
+    margin-bottom: 8px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .btn-primary, .btn-secondary {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 9px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-soft);
+  }
+
+  .btn-secondary {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--gold);
+    color: var(--accent);
+  }
+
+  /* Manager dashboard */
+  .dashboard {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 8px;
+  }
+
+  .dashboard.active {
+    display: block;
+  }
+
+  .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .dashboard-header h1 {
+    color: var(--accent);
+    font-size: 26px;
+    margin: 0;
+  }
+
+  .submission-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+
+  .submission-card .sub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+
+  .collapsible-header {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .chevron {
+    display: inline-block;
+    color: var(--ink-soft);
+    margin-right: 6px;
+    font-size: 11px;
+    transition: transform 0.15s ease;
+  }
+
+  .submission-card.expanded .chevron,
+  .route-store-card.expanded .chevron {
+    transform: rotate(90deg);
+  }
+
+  .card-body {
+    display: none;
+  }
+
+  .submission-card.expanded .card-body,
+  .route-store-card.expanded .card-body {
+    display: block;
+  }
+
+  .edit-submission-items {
+    max-height: 320px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    padding-right: 4px;
+  }
+
+  .edit-submission-items .cat-label {
+    display: block;
+    margin-top: 10px;
+  }
+
+  .edit-item-qty-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    gap: 10px;
+  }
+
+  .edit-item-qty-row .item-name-label {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .edit-item-qty-row .qty-input {
+    width: 64px;
+  }
+
+  .adjusted-qty {
+    color: var(--danger-soft);
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  .adjusted-tag {
+    display: inline-block;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--danger-soft);
+    border: 1px solid rgba(179,64,74,0.4);
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .adjustment-note {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(179,64,74,0.4);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    color: var(--danger-soft);
+  }
+
+  .compare-search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .item-search-suggestions {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-top: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 20;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+
+  .item-search-suggestions.active {
+    display: block;
+  }
+
+  .item-suggestion {
+    padding: 9px 14px;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .item-suggestion:hover {
+    background: var(--panel-alt);
+  }
+
+  .item-suggestion .suggestion-cat {
+    color: var(--ink-soft);
+    font-size: 11px;
+    margin-left: 6px;
+  }
+
+  .selected-items-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .item-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 8px 5px 12px;
+    border-radius: 16px;
+  }
+
+  .item-chip button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+
+  .compare-item-group {
+    margin-bottom: 22px;
+  }
+
+  .compare-item-group h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 16px;
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .compare-store-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+  }
+
+  .compare-store-row.high {
+    background: rgba(227,182,79,0.10);
+  }
+
+  .compare-store-row.low {
+    background: rgba(179,64,74,0.10);
+  }
+
+  .compare-store-row .compare-store-name {
+    color: var(--ink);
+  }
+
+  .compare-store-row .compare-qty {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .compare-store-row.high .compare-qty {
+    color: var(--gold);
+  }
+
+  .compare-store-row.low .compare-qty {
+    color: var(--danger-soft);
+  }
+
+  .date-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .date-filter-row select {
+    max-width: 260px;
+  }
+
+  #printSummaryArea {
+    display: none;
+  }
+
+  @media print {
+    body.printing > *:not(#printSummaryArea) {
+      display: none !important;
+    }
+    body.printing #printSummaryArea {
+      display: block !important;
+      color: #111;
+      background: #fff;
+      font-family: Georgia, serif;
+      padding: 0;
+    }
+    #printSummaryArea h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    #printSummaryArea h2 {
+      font-size: 15px;
+      margin: 18px 0 6px;
+      border-bottom: 1px solid #999;
+      padding-bottom: 4px;
+    }
+    #printSummaryArea .print-meta {
+      font-size: 11px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .print-table th, .print-table td {
+      border: 1px solid #999;
+      padding: 3px 8px;
+      text-align: left;
+    }
+    .print-cat-row td {
+      font-weight: bold;
+      background: #eee;
+    }
+    .print-note {
+      font-size: 12px;
+      margin: 4px 0 10px;
+    }
+  }
+
+  .submission-card .store-title {
+    font-size: 17px;
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .submission-card .timestamp {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .submission-card .cat-label {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    display: block;
+    margin-top: 10px;
+  }
+
+  .submission-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0;
+  }
+
+  .submission-card li {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    padding: 3px 0;
+  }
+
+  .no-submissions {
+    font-family: 'Public Sans', sans-serif;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 40px 0;
+  }
+
+  .dashboard-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .danger-link {
+    color: var(--danger);
+    border-color: rgba(179,64,74,0.4);
+  }
+
+  .danger-link:hover {
+    border-color: var(--danger);
+    color: var(--danger-soft);
+  }
+
+  .danger-btn {
+    background: var(--danger);
+  }
+
+  .danger-btn:hover {
+    background: var(--danger-soft);
+  }
+
+  .submission-card .sub-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .delete-submission-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+
+  .delete-submission-btn:hover {
+    border-color: var(--accent-soft);
+    color: var(--accent-soft);
+  }
+
+  .auth-gate {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .auth-toggle-text {
+    text-align: center;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 14px;
+  }
+
+  .auth-toggle-link {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: 'Public Sans', sans-serif;
+    padding: 0 0 0 4px;
+  }
+
+  .store-name-input[readonly] {
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+
+  .notes-row {
+    display: block;
+  }
+
+  .notes-input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: 'Public Sans', sans-serif;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--ink);
+    resize: vertical;
+    min-height: 70px;
+  }
+
+  .notes-input:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+
+  .notes-input::placeholder {
+    color: var(--ink-soft);
+    opacity: 0.7;
+  }
+
+  .optional-tag {
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .oos-tag {
+    display: inline-block;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--danger-soft);
+    border: 1px solid rgba(179,64,74,0.4);
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .low-tag {
+    display: inline-block;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gold);
+    border: 1px solid rgba(227,182,79,0.4);
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .summary-notes {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .summary-notes p {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 4px 0 0;
+    white-space: pre-wrap;
+  }
+
+  .dashboard-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 4px 10px;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  .account-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .account-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .acct-route-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .acct-route-row .route-select {
+    padding: 5px 10px;
+    font-size: 12px;
+    width: auto;
+    min-width: 140px;
+  }
+
+  .account-info .acct-name {
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .account-info .acct-meta {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .account-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .account-actions button {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+
+  .add-item-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .add-item-row .store-name-input {
+    min-width: 160px;
+  }
+
+  select.store-name-input {
+    cursor: pointer;
+  }
+
+  .catalog-category-group {
+    margin-bottom: 22px;
+  }
+
+  .catalog-category-group h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    color: var(--gold);
+    font-size: 15px;
+    margin: 0 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .catalog-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .catalog-item-row .item-label {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .resource-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+
+  .resource-card h4 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 16px;
+    margin: 0 0 8px;
+  }
+
+  .resource-card p {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    white-space: pre-wrap;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .day-checkbox-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .day-checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--input-bg);
+    color: var(--ink-soft);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .day-checkbox.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .recipient-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .recipient-row:last-child {
+    border-bottom: none;
+  }
+
+  .route-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .route-pill {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  .route-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .route-store-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 12px;
+  }
+
+  .route-store-card .sub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+
+  .route-store-card .store-title {
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .messages-thread {
+    max-height: 260px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+
+  .message-item {
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  .message-item .msg-meta {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  .message-item .msg-text {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    white-space: pre-wrap;
+    margin: 0;
+  }
+
+  .message-item .msg-reply {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .message-item .msg-reply .msg-meta {
+    color: var(--gold);
+  }
+
+  .needs-reply-tag {
+    display: inline-block;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gold);
+    border: 1px solid rgba(227,182,79,0.4);
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .top-actions-row {
+    max-width: 760px;
+    margin: 0 auto 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .messages-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 8px 18px;
+    cursor: pointer;
+  }
+
+  .messages-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+</style>
+</head>
+<body>
+
+<div id="printSummaryArea"></div>
+
+
+<header>
+  <svg class="star-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <polygon points="50.0,4.0 56.9,33.4 82.5,17.5 66.6,43.1 96.0,50.0 66.6,56.9 82.5,82.5 56.9,66.6 50.0,96.0 43.1,66.6 17.5,82.5 33.4,56.9 4.0,50.0 33.4,43.1 17.5,17.5 43.1,33.4" style="fill:var(--gold);"/>
+  </svg>
+  <div class="eyebrow">Holiday Partner Store</div>
+  <h1>Store Inventory</h1>
+  <p>Enter quantities for each item, then submit your inventory.</p>
+  <button type="button" id="managerModeBtn" class="manager-link">Manager Mode</button>
+</header>
+
+<!-- Store login / account creation gate -->
+<div id="authGate" class="auth-gate">
+  <div class="category">
+    <div class="category-header">
+      <h2 id="authTitle">Store Log In</h2>
+    </div>
+    <div class="items">
+      <div class="item-row store-name-row">
+        <label class="item-name" for="authStoreName">Store Name</label>
+        <input type="text" id="authStoreName" class="store-name-input" placeholder="Enter store name" autocomplete="off">
+      </div>
+      <div class="item-row store-name-row">
+        <label class="item-name" for="authPassword">Password</label>
+        <input type="password" id="authPassword" class="store-name-input" placeholder="Enter password" autocomplete="off">
+      </div>
+      <div class="item-row store-name-row" id="authConfirmRow" style="display:none;">
+        <label class="item-name" for="authConfirmPassword">Confirm Password</label>
+        <input type="password" id="authConfirmPassword" class="store-name-input" placeholder="Re-enter password" autocomplete="off">
+      </div>
+      <div class="item-row store-name-row" id="authLockboxRow" style="display:none;">
+        <label class="item-name" for="authLockboxCode">Lockbox Code <span class="optional-tag">(optional)</span></label>
+        <input type="text" id="authLockboxCode" class="store-name-input" placeholder="e.g. 4471" autocomplete="off">
+      </div>
+    </div>
+  </div>
+  <div class="modal-error" id="authError" style="max-width:760px;margin:0 auto 10px;text-align:center;"></div>
+  <div class="submit-bar">
+    <button type="button" id="authActionBtn">Log In</button>
+  </div>
+  <p class="auth-toggle-text">
+    <span id="authToggleText">New store?</span>
+    <button type="button" id="authToggleBtn" class="auth-toggle-link">Create an account</button>
+  </p>
+</div>
+
+<form id="orderForm" style="display:none;">
+  <div class="top-actions-row">
+    <button type="button" id="openResourcesBtn" class="messages-btn">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 4h11l3 3v13H5V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10h7M9 14h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Resources
+    </button>
+    <button type="button" id="openMessagesBtn" class="messages-btn">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Messages
+    </button>
+  </div>
+
+  <div class="category" id="storeNameCard">
+    <div class="category-header">
+      <h2>Store Information</h2>
+    </div>
+    <div class="items">
+      <div class="item-row store-name-row">
+        <label class="item-name" for="storeName">Store Name</label>
+        <input type="text" id="storeName" name="storeName" class="store-name-input" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories injected by JS from a single data source -->
+  <div id="categoryContainer"></div>
+
+  <div class="category" id="notesCard">
+    <div class="category-header">
+      <h2>Notes</h2>
+    </div>
+    <div class="items">
+      <div class="item-row notes-row">
+        <textarea id="storeNotes" class="notes-input" rows="3" placeholder="Anything we should know — substitutions, delays, damaged items, special requests…"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-bar">
+    <button type="submit">Submit Order</button>
+  </div>
+  <p class="auth-toggle-text">
+    <button type="button" id="switchStoreBtn" class="auth-toggle-link">Not your store? Switch account</button>
+  </p>
+</form>
+
+<div id="summary"></div>
+
+<!-- Manager mode password gate -->
+<div id="managerOverlay" class="overlay">
+  <div class="modal">
+    <h2>Manager Mode</h2>
+    <p class="modal-note">Enter password to view submitted inventory orders.</p>
+    <input type="password" id="managerPasswordInput" class="store-name-input" placeholder="Password" autocomplete="off">
+    <div class="modal-error" id="managerError"></div>
+    <div class="modal-actions">
+      <button type="button" id="managerCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="managerSubmitBtn" class="btn-primary">Enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manager dashboard -->
+<div id="managerDashboard" class="dashboard">
+  <div class="dashboard-header">
+    <h1>Manager Dashboard</h1>
+    <div class="dashboard-actions">
+      <button type="button" id="clearAllBtn" class="btn-secondary danger-link">Clear All</button>
+      <button type="button" id="managerExitBtn" class="btn-secondary">Exit</button>
+    </div>
+  </div>
+
+  <div class="dashboard-tabs">
+    <button type="button" class="tab-btn active" id="submissionsTabBtn">Submissions</button>
+    <button type="button" class="tab-btn" id="accountsTabBtn">Store Accounts</button>
+    <button type="button" class="tab-btn" id="catalogTabBtn">Catalog</button>
+    <button type="button" class="tab-btn" id="routesTabBtn">Routes</button>
+    <button type="button" class="tab-btn" id="messagesTabBtn">Messages</button>
+    <button type="button" class="tab-btn" id="compareTabBtn">Compare Items</button>
+    <button type="button" class="tab-btn" id="resourcesTabBtn">Resources</button>
+    <button type="button" class="tab-btn" id="emailTabBtn">Email</button>
+  </div>
+
+  <div id="submissionsPanel" class="tab-panel active">
+    <div id="submissionsFilterBar"></div>
+    <div id="submissionsList"></div>
+  </div>
+
+  <div id="accountsPanel" class="tab-panel">
+    <div id="accountsList"></div>
+  </div>
+
+  <div id="catalogPanel" class="tab-panel">
+    <div class="account-card" style="margin-bottom:18px;">
+      <div class="account-info" style="flex:1;">
+        <span class="acct-name" style="margin-bottom:6px;">Add Item</span>
+        <div class="add-item-row">
+          <input type="text" id="newItemName" class="store-name-input" placeholder="Item name" style="max-width:none;flex:1;">
+          <select id="newItemCategory" class="store-name-input" style="max-width:none;flex:1;"></select>
+          <button type="button" id="addItemBtn" class="btn-primary">Add</button>
+        </div>
+        <div class="modal-error" id="addItemError"></div>
+      </div>
+    </div>
+    <div id="catalogList"></div>
+  </div>
+
+  <div id="routesPanel" class="tab-panel">
+    <div class="route-pill-row" id="routePillRow"></div>
+    <div class="add-item-row" style="margin-bottom:18px;">
+      <input type="text" id="newRouteName" class="store-name-input" placeholder="New route name (e.g. South Route)" style="max-width:none;flex:1;">
+      <button type="button" id="addRouteBtn" class="btn-primary">Create Route</button>
+    </div>
+    <div class="modal-error" id="addRouteError"></div>
+    <div id="routeStoresList"></div>
+  </div>
+
+  <div id="messagesPanel" class="tab-panel">
+    <div id="messagesList"></div>
+  </div>
+
+  <div id="comparePanel" class="tab-panel">
+    <p class="modal-note" style="margin-bottom:12px;">Search for one or more items to see how much each store currently has, so you can spot who's overstocked and who needs a transfer.</p>
+    <div class="compare-search-wrap">
+      <input type="text" id="itemSearchInput" class="store-name-input" placeholder="Search items…" style="max-width:none;width:100%;" autocomplete="off">
+      <div id="itemSearchSuggestions" class="item-search-suggestions"></div>
+    </div>
+    <div id="selectedItemsChips" class="selected-items-chips"></div>
+    <div id="itemCompareResults"></div>
+  </div>
+
+  <div id="resourcesPanel" class="tab-panel">
+    <div class="account-card" style="margin-bottom:18px;">
+      <div class="account-info" style="flex:1;">
+        <span class="acct-name" style="margin-bottom:6px;">Add Resource</span>
+        <div class="add-item-row" style="margin-bottom:8px;">
+          <input type="text" id="newResourceTitle" class="store-name-input" placeholder="Title (e.g. Opening Checklist)" style="max-width:none;flex:1;">
+          <input type="text" id="newResourceCategory" class="store-name-input" placeholder="Category (e.g. FAQ)" style="max-width:none;flex:1;">
+        </div>
+        <textarea id="newResourceContent" class="notes-input" rows="3" placeholder="Content…" style="margin-bottom:8px;"></textarea>
+        <button type="button" id="addResourceBtn" class="btn-primary">Add Resource</button>
+        <div class="modal-error" id="addResourceError"></div>
+      </div>
+    </div>
+    <div id="resourcesList"></div>
+  </div>
+
+  <div id="emailPanel" class="tab-panel">
+    <div class="account-card" style="margin-bottom:18px;">
+      <div class="account-info" style="flex:1;">
+        <span class="acct-name" style="margin-bottom:10px;">Recipients</span>
+        <div class="add-item-row" style="margin-bottom:10px;">
+          <input type="email" id="newRecipientEmail" class="store-name-input" placeholder="email@example.com" style="max-width:none;flex:1;">
+          <button type="button" id="addRecipientBtn" class="btn-primary">Add</button>
+        </div>
+        <div class="modal-error" id="addRecipientError"></div>
+        <div id="recipientsList"></div>
+      </div>
+    </div>
+
+    <div class="account-card" style="margin-bottom:18px;">
+      <div class="account-info" style="flex:1;width:100%;">
+        <span class="acct-name" style="margin-bottom:10px;">Automatic Schedule</span>
+        <label class="acct-meta" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <input type="checkbox" id="autoSendToggle">
+          Send automatically on the schedule below
+        </label>
+        <div class="day-checkbox-row" id="dayCheckboxRow"></div>
+        <div class="add-item-row" style="margin-top:12px;margin-bottom:12px;">
+          <label class="item-name" for="sendTimeInput" style="flex:0;white-space:nowrap;">Send at</label>
+          <input type="time" id="sendTimeInput" class="store-name-input" style="max-width:140px;">
+        </div>
+        <button type="button" id="saveScheduleBtn" class="btn-primary">Save Schedule</button>
+        <div class="modal-error" id="scheduleError"></div>
+        <p class="acct-meta" id="lastAutoSentLabel" style="margin-top:10px;"></p>
+      </div>
+    </div>
+
+    <div class="account-card">
+      <div class="account-info" style="flex:1;width:100%;">
+        <span class="acct-name" style="margin-bottom:10px;">Send Now</span>
+        <div class="add-item-row" style="margin-bottom:10px;">
+          <select id="manualSendDateSelect" class="store-name-input" style="max-width:none;flex:1;"></select>
+          <button type="button" id="manualSendBtn" class="btn-primary">Send Day Summary Now</button>
+        </div>
+        <div class="modal-error" id="manualSendError"></div>
+        <p class="acct-meta" id="manualSendStatus"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generic confirm modal (used for delete / clear all) -->
+<div id="confirmOverlay" class="overlay">
+  <div class="modal">
+    <h2 id="confirmTitle">Are you sure?</h2>
+    <p class="modal-note" id="confirmMessage"></p>
+    <input type="password" id="confirmPasswordInput" class="store-name-input" placeholder="Manager password" style="max-width:none;width:100%;margin-bottom:8px;" autocomplete="off">
+    <div class="modal-error" id="confirmPasswordError"></div>
+    <div class="modal-actions">
+      <button type="button" id="confirmCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="confirmOkBtn" class="btn-primary danger-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change password modal -->
+<div id="changePasswordOverlay" class="overlay">
+  <div class="modal">
+    <h2>Change Password</h2>
+    <p class="modal-note" id="changePasswordStoreLabel"></p>
+    <input type="password" id="newPasswordInput" class="store-name-input" placeholder="New password" autocomplete="off">
+    <div class="modal-error" id="changePasswordError"></div>
+    <div class="modal-actions">
+      <button type="button" id="changePasswordCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="changePasswordSaveBtn" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit submission modal (correction/swap mode) -->
+<div id="editSubmissionOverlay" class="overlay">
+  <div class="modal" style="max-width:520px;">
+    <h2>Adjust Inventory</h2>
+    <p class="modal-note" id="editSubmissionStoreLabel"></p>
+    <div id="editSubmissionItems" class="edit-submission-items"></div>
+    <textarea id="editSubmissionNote" class="notes-input" rows="2" placeholder="Reason for adjustment (optional) — e.g. moved 5 to South Store"></textarea>
+    <div class="modal-error" id="editSubmissionError"></div>
+    <div class="modal-actions">
+      <button type="button" id="editSubmissionCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="editSubmissionSaveBtn" class="btn-primary">Save Adjustment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reply to message modal (manager side) -->
+<div id="replyMessageOverlay" class="overlay">
+  <div class="modal" style="max-width:440px;">
+    <h2>Reply</h2>
+    <p class="modal-note" id="replyMessageStoreLabel"></p>
+    <textarea id="replyMessageInput" class="notes-input" rows="4" placeholder="Type your reply…"></textarea>
+    <div class="modal-error" id="replyMessageError"></div>
+    <div class="modal-actions">
+      <button type="button" id="replyMessageCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="replyMessageSaveBtn" class="btn-primary">Send Reply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Store-facing messages panel (store side) -->
+<div id="storeMessagesOverlay" class="overlay">
+  <div class="modal" style="max-width:480px;">
+    <h2>Messages</h2>
+    <p class="modal-note">Send a message to the Dewey's team, or check replies to messages you've already sent.</p>
+    <textarea id="newStoreMessageInput" class="notes-input" rows="3" placeholder="Type a message…"></textarea>
+    <div class="modal-error" id="storeMessageError"></div>
+    <div class="modal-actions" style="justify-content:flex-start;margin-bottom:14px;">
+      <button type="button" id="sendStoreMessageBtn" class="btn-primary">Send</button>
+    </div>
+    <div id="storeMessagesThread" class="messages-thread"></div>
+    <div class="modal-actions">
+      <button type="button" id="storeMessagesCloseBtn" class="btn-secondary">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Store-facing resources page (full page, not a small modal) -->
+<div id="storeResourcesPage" class="dashboard">
+  <div class="dashboard-header">
+    <h1>Resources</h1>
+    <button type="button" id="storeResourcesCloseBtn" class="btn-secondary">Close</button>
+  </div>
+  <div id="storeResourcesList"></div>
+</div>
+
+<!-- Edit lockbox code modal -->
+<div id="editLockboxOverlay" class="overlay">
+  <div class="modal">
+    <h2>Edit Lockbox Code</h2>
+    <p class="modal-note" id="editLockboxStoreLabel"></p>
+    <input type="text" id="editLockboxInput" class="store-name-input" placeholder="Lockbox code" style="max-width:none;width:100%;" autocomplete="off">
+    <div class="modal-error" id="editLockboxError"></div>
+    <div class="modal-actions">
+      <button type="button" id="editLockboxCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="editLockboxSaveBtn" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit resource modal -->
+<div id="editResourceOverlay" class="overlay">
+  <div class="modal" style="max-width:480px;">
+    <h2>Edit Resource</h2>
+    <input type="text" id="editResourceTitle" class="store-name-input" placeholder="Title" style="max-width:none;width:100%;margin-bottom:8px;">
+    <input type="text" id="editResourceCategory" class="store-name-input" placeholder="Category" style="max-width:none;width:100%;margin-bottom:8px;">
+    <textarea id="editResourceContent" class="notes-input" rows="4" placeholder="Content…" style="margin-bottom:8px;"></textarea>
+    <div class="modal-error" id="editResourceError"></div>
+    <div class="modal-actions">
+      <button type="button" id="editResourceCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="editResourceSaveBtn" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit catalog item modal -->
+<div id="editItemOverlay" class="overlay">
+  <div class="modal">
+    <h2>Edit Item</h2>
+    <input type="text" id="editItemName" class="store-name-input" placeholder="Item name" style="max-width:none;width:100%;margin-bottom:8px;">
+    <select id="editItemCategory" class="store-name-input" style="max-width:none;width:100%;margin-bottom:8px;"></select>
+    <div class="modal-error" id="editItemError"></div>
+    <div class="modal-actions">
+      <button type="button" id="editItemCancelBtn" class="btn-secondary">Cancel</button>
+      <button type="button" id="editItemSaveBtn" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Items at this quantity or below (but above 0) are flagged "Low Stock".
+  // Items at exactly 0 are flagged "Out of Stock". Adjust this number to change sensitivity.
+  const LOW_STOCK_THRESHOLD = 2;
+
+  function getStockTag(qty) {
+    if (qty === 0) return '<span class="oos-tag">Out of Stock</span>';
+    if (qty > 0 && qty <= LOW_STOCK_THRESHOLD) return '<span class="low-tag">Low Stock</span>';
+    return '';
+  }
+
+  function countStockFlags(byCategory) {
+    let outOfStock = 0;
+    let lowStock = 0;
+    Object.keys(byCategory).forEach(cat => {
+      byCategory[cat].forEach(item => {
+        if (item.qty === 0) outOfStock++;
+        else if (item.qty <= LOW_STOCK_THRESHOLD) lowStock++;
+      });
+    });
+    return { outOfStock, lowStock };
+  }
+
+  function stockFlagBadgeHtml(byCategory) {
+    const { outOfStock, lowStock } = countStockFlags(byCategory);
+    let html = '';
+    if (outOfStock > 0) html += `<span class="oos-tag">${outOfStock} Out of Stock</span>`;
+    if (lowStock > 0) html += `<span class="low-tag">${lowStock} Low Stock</span>`;
+    return html;
+  }
+
+  // Build a quick-lookup map from an adjustment's sparse byCategory diff: "Category||Item" -> qty
+  function adjustmentToMap(adjustedByCategory) {
+    const map = {};
+    if (!adjustedByCategory) return map;
+    Object.keys(adjustedByCategory).forEach(cat => {
+      adjustedByCategory[cat].forEach(item => {
+        map[cat + '||' + item.name] = item.qty;
+      });
+    });
+    return map;
+  }
+
+  // Given a submission's original byCategory and an optional adjustment record,
+  // return the effective (corrected) quantity for a given category/item.
+  function effectiveQty(originalQty, adjMap, cat, itemName) {
+    const key = cat + '||' + itemName;
+    return (adjMap && key in adjMap) ? adjMap[key] : originalQty;
+  }
+
+  // Compute a sparse diff (only changed items) between a submission's original values
+  // and a map of edited values keyed "Category||Item" -> newQty.
+  function computeAdjustmentDiff(originalByCategory, editedMap) {
+    const diff = {};
+    Object.keys(originalByCategory).forEach(cat => {
+      originalByCategory[cat].forEach(item => {
+        const key = cat + '||' + item.name;
+        const newQty = editedMap[key];
+        if (typeof newQty === 'number' && newQty !== item.qty) {
+          if (!diff[cat]) diff[cat] = [];
+          diff[cat].push({ name: item.name, qty: newQty });
+        }
+      });
+    });
+    return diff;
+  }
+
+  function diffIsEmpty(diff) {
+    return Object.keys(diff).every(cat => diff[cat].length === 0) || Object.keys(diff).length === 0;
+  }
+
+  function buildEffectiveByCategory(byCategory, adjMap) {
+    const effective = {};
+    Object.keys(byCategory).forEach(cat => {
+      effective[cat] = byCategory[cat].map(item => ({
+        name: item.name,
+        qty: effectiveQty(item.qty, adjMap, cat, item.name)
+      }));
+    });
+    return effective;
+  }
+
+  const CATEGORY_ORDER = [
+    "Tubes",
+    "Cheese Straws",
+    "Seasonal Gable Box",
+    "Cookie Tins",
+    "Dewzies",
+    "Cookie Trays",
+    "Cakes",
+    "Oatmeal Cookies",
+    "Merchandise"
+  ];
+
+  function slugify(str) {
+    return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  // Escapes text before it's dropped into innerHTML. Used for any string that
+  // originated from a store, a manager form, or the database (store names,
+  // item names, resource titles, emails, etc.) rather than a literal we wrote.
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  const container = document.getElementById('categoryContainer');
+  let catalogRows = []; // flat list of {id, category, item_name} from Supabase
+
+  function renderCategoryForm() {
+    container.innerHTML = '';
+
+    CATEGORY_ORDER.forEach(categoryName => {
+      const items = catalogRows.filter(r => r.category === categoryName);
+      if (items.length === 0) return;
+
+      const catDiv = document.createElement('div');
+      catDiv.className = 'category';
+
+      const header = document.createElement('div');
+      header.className = 'category-header';
+      header.innerHTML = `<h2>${categoryName}</h2><span class="count">${items.length} item${items.length > 1 ? 's' : ''}</span>`;
+      catDiv.appendChild(header);
+
+      const itemsDiv = document.createElement('div');
+      itemsDiv.className = 'items';
+
+      items.forEach(row => {
+        const inputId = `${slugify(categoryName)}--${slugify(row.item_name)}`;
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'item-row';
+        rowDiv.innerHTML = `
+          <label class="item-name" for="${inputId}">${escapeHtml(row.item_name)}</label>
+          <input type="number" class="qty-input" id="${inputId}" name="${inputId}" min="0" step="1" value="0" data-item="${escapeHtml(row.item_name)}" data-category="${escapeHtml(categoryName)}">
+        `;
+        itemsDiv.appendChild(rowDiv);
+      });
+
+      catDiv.appendChild(itemsDiv);
+      container.appendChild(catDiv);
+    });
+  }
+
+  async function loadCatalog() {
+    container.innerHTML = '<p class="no-submissions">Loading catalog…</p>';
+    const result = await fetchCatalog();
+    if (!result.ok) {
+      container.innerHTML = '<p class="no-submissions">Could not load the item catalog. Check your connection and reload the page.</p>';
+      return;
+    }
+    catalogRows = result.data;
+    renderCategoryForm();
+  }
+
+  const SUPABASE_URL = "https://nrvulyhenqjnxteovond.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ydnVseWhlbnFqbnh0ZW92b25kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTY5ODUsImV4cCI6MjA5OTU5Mjk4NX0.i_aJUbuWdYZc51Wu0L1dqlttir6c42zcNW2S25mbOW0";
+
+  // The manager password now lives only in the database (hashed), never in this file.
+  // After a successful Manager Mode login we keep the entered password in memory for
+  // this browser tab only, so later manager actions (delete, change password, etc.)
+  // can re-prove manager identity to the database without asking again mid-session.
+  let managerSessionPassword = null;
+
+  // ---- Server-verified auth (RPC calls to Postgres functions — see the Supabase
+  // migration for verify_login / verify_manager / create_store_account / etc.) ----
+
+  async function callRpc(fnName, args) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fnName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(args || {})
+      });
+      if (!res.ok) return { ok: false, error: 'network' };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, error: 'network' };
+    }
+  }
+
+  async function verifyManagerPassword(password) {
+    const result = await callRpc('verify_manager', { p_password: password });
+    return result.ok && result.data === true;
+  }
+
+  // ---- Store accounts ----
+
+  async function fetchAllAccounts() {
+    try {
+      // store_accounts_safe is a view with no password/password_hash column at all —
+      // see the Supabase migration. The base table itself has no anon SELECT policy.
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/store_accounts_safe?select=*&order=store_name.asc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function createStoreAccount(storeName, password, lockboxCode) {
+    // Uniqueness + password hashing both happen inside the create_store_account
+    // Postgres function now, so there's no read-then-write race and the plaintext
+    // password never round-trips through a table row.
+    const result = await callRpc('create_store_account', {
+      p_store_name: storeName,
+      p_password: password,
+      p_lockbox_code: lockboxCode || null
+    });
+    if (!result.ok) return { ok: false, reason: 'error' };
+    const row = Array.isArray(result.data) ? result.data[0] : result.data;
+    if (!row || !row.ok) return { ok: false, reason: (row && row.reason) || 'error' };
+    return { ok: true };
+  }
+
+  async function verifyLogin(storeName, password) {
+    // The password check happens server-side against the hashed value; this
+    // request never sees or transmits any other store's data.
+    const result = await callRpc('verify_login', { p_store_name: storeName, p_password: password });
+    if (!result.ok) return { ok: false, reason: 'network' };
+    const row = Array.isArray(result.data) ? result.data[0] : result.data;
+    if (!row) return { ok: false, reason: 'network' };
+    if (!row.ok) return { ok: false, reason: row.reason || 'bad_password' };
+    return { ok: true, storeName: row.store_name };
+  }
+
+  async function updateAccountPassword(id, newPassword) {
+    const result = await callRpc('change_store_password', {
+      p_account_id: id,
+      p_new_password: newPassword,
+      p_manager_password: managerSessionPassword
+    });
+    return result.ok && result.data === true;
+  }
+
+  async function updateAccountLockbox(id, lockboxCode) {
+    // Lockbox codes are physical-access credentials, so this goes through the
+    // same manager-gated RPC path as passwords rather than a direct table write.
+    const result = await callRpc('change_store_lockbox', {
+      p_account_id: id,
+      p_lockbox_code: lockboxCode || null,
+      p_manager_password: managerSessionPassword
+    });
+    return result.ok && result.data === true;
+  }
+
+  async function updateAccountRoute(id, routeId) {
+    const result = await callRpc('change_store_route', {
+      p_account_id: id,
+      p_route_id: routeId || null,
+      p_manager_password: managerSessionPassword
+    });
+    return result.ok && result.data === true;
+  }
+
+  async function deleteAccount(id) {
+    const result = await callRpc('delete_store_account', {
+      p_account_id: id,
+      p_manager_password: managerSessionPassword
+    });
+    return result.ok && result.data === true;
+  }
+
+  // ---- Routes ----
+
+  async function fetchRoutes() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/routes?select=*&order=route_name.asc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function createRoute(routeName) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/routes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ route_name: routeName })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteRoute(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/routes?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // ---- Submission adjustments (correction/swap mode) ----
+
+  async function fetchAdjustments() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/submission_adjustments?select=*`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function saveAdjustment(submissionId, existingAdjustmentId, adjustedByCategory, note) {
+    try {
+      if (existingAdjustmentId) {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/submission_adjustments?id=eq.${existingAdjustmentId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ adjusted_by_category: adjustedByCategory, note: note || null, adjusted_at: new Date().toISOString() })
+        });
+        return res.ok;
+      } else {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/submission_adjustments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ submission_id: submissionId, adjusted_by_category: adjustedByCategory, note: note || null })
+        });
+        return res.ok;
+      }
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteAdjustment(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/submission_adjustments?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // ---- Resources (store-facing help content) ----
+
+  async function fetchResources() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/resources?select=*&order=category.asc,sort_order.asc,title.asc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function createResource(title, content, category) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/resources`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ title: title, content: content, category: category || 'General' })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function updateResource(id, title, content, category) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/resources?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ title: title, content: content, category: category || 'General' })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteResource(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/resources?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // ---- Email: recipients, schedule settings, and send trigger ----
+
+  async function fetchEmailRecipients() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/email_recipients?select=*&order=email.asc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function addEmailRecipient(email) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/email_recipients`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ email: email })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteEmailRecipient(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/email_recipients?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function fetchEmailSettings() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/email_settings?select=*&id=eq.1`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: null };
+      const rows = await res.json();
+      return { ok: true, data: rows[0] || null };
+    } catch (err) {
+      return { ok: false, data: null };
+    }
+  }
+
+  async function saveEmailSettings(autoSendEnabled, daysOfWeek, sendTime) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/email_settings?id=eq.1`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          auto_send_enabled: autoSendEnabled,
+          days_of_week: daysOfWeek,
+          send_time: sendTime,
+          updated_at: new Date().toISOString()
+        })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function triggerDaySummaryEmail(dateKey) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-day-summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ manual: true, dateKey: dateKey })
+      });
+      const data = await res.json().catch(() => ({}));
+      return { ok: res.ok, data };
+    } catch (err) {
+      return { ok: false, data: { error: String(err) } };
+    }
+  }
+
+  // ---- Store <-> manager messages ----
+
+  async function fetchAllMessages() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/store_messages?select=*&order=created_at.desc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function sendMessage(storeName, messageText) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ store_name: storeName, message: messageText })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function replyToMessage(id, replyText) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_messages?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ reply: replyText, replied_at: new Date().toISOString() })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteMessage(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_messages?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // ---- Catalog items ----
+
+  async function fetchCatalog() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/catalog_items?select=*&order=category.asc,item_name.asc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function createCatalogItem(category, itemName) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/catalog_items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ category: category, item_name: itemName })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function updateCatalogItem(id, category, itemName) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/catalog_items?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ category: category, item_name: itemName })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteCatalogItem(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/catalog_items?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // ---- Auth gate (login / create account) ----
+  let currentStoreName = null;
+  let authMode = 'login'; // 'login' | 'create'
+
+  const authGate = document.getElementById('authGate');
+  const authTitle = document.getElementById('authTitle');
+  const authStoreNameInput = document.getElementById('authStoreName');
+  const authPasswordInput = document.getElementById('authPassword');
+  const authConfirmRow = document.getElementById('authConfirmRow');
+  const authConfirmPasswordInput = document.getElementById('authConfirmPassword');
+  const authLockboxRow = document.getElementById('authLockboxRow');
+  const authLockboxCodeInput = document.getElementById('authLockboxCode');
+  const authError = document.getElementById('authError');
+  const authActionBtn = document.getElementById('authActionBtn');
+  const authToggleText = document.getElementById('authToggleText');
+  const authToggleBtn = document.getElementById('authToggleBtn');
+  const orderFormEl = document.getElementById('orderForm');
+  const storeNameField = document.getElementById('storeName');
+  const switchStoreBtn = document.getElementById('switchStoreBtn');
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    authError.textContent = '';
+    authPasswordInput.value = '';
+    authConfirmPasswordInput.value = '';
+    authLockboxCodeInput.value = '';
+    if (mode === 'login') {
+      authTitle.textContent = 'Store Log In';
+      authActionBtn.textContent = 'Log In';
+      authConfirmRow.style.display = 'none';
+      authLockboxRow.style.display = 'none';
+      authToggleText.textContent = 'New store?';
+      authToggleBtn.textContent = 'Create an account';
+    } else {
+      authTitle.textContent = 'Create Store Account';
+      authActionBtn.textContent = 'Create Account';
+      authConfirmRow.style.display = '';
+      authLockboxRow.style.display = '';
+      authToggleText.textContent = 'Already have an account?';
+      authToggleBtn.textContent = 'Log in';
+    }
+  }
+
+  authToggleBtn.addEventListener('click', function() {
+    setAuthMode(authMode === 'login' ? 'create' : 'login');
+  });
+
+  function enterApp(storeName) {
+    currentStoreName = storeName;
+    storeNameField.value = storeName;
+    authGate.style.display = 'none';
+    orderFormEl.style.display = '';
+  }
+
+  function exitToAuthGate() {
+    currentStoreName = null;
+    authStoreNameInput.value = '';
+    authPasswordInput.value = '';
+    authConfirmPasswordInput.value = '';
+    authLockboxCodeInput.value = '';
+    setAuthMode('login');
+    orderFormEl.style.display = 'none';
+    authGate.style.display = '';
+    document.getElementById('summary').style.display = 'none';
+  }
+
+  switchStoreBtn.addEventListener('click', exitToAuthGate);
+
+  authActionBtn.addEventListener('click', async function() {
+    const storeName = authStoreNameInput.value.trim();
+    const password = authPasswordInput.value;
+
+    if (!storeName || !password) {
+      authError.textContent = 'Please enter a store name and password.';
+      return;
+    }
+
+    authActionBtn.disabled = true;
+    const originalLabel = authActionBtn.textContent;
+    authActionBtn.textContent = authMode === 'login' ? 'Logging in…' : 'Creating…';
+
+    if (authMode === 'login') {
+      const result = await verifyLogin(storeName, password);
+      authActionBtn.disabled = false;
+      authActionBtn.textContent = originalLabel;
+
+      if (result.ok) {
+        enterApp(result.storeName);
+      } else if (result.reason === 'not_found') {
+        authError.textContent = 'No account found with that store name.';
+      } else if (result.reason === 'bad_password') {
+        authError.textContent = 'Incorrect password.';
+      } else {
+        authError.textContent = 'Could not reach the account system. Check your connection and try again.';
+      }
+    } else {
+      const confirmPassword = authConfirmPasswordInput.value;
+      const lockboxCode = authLockboxCodeInput.value.trim();
+      if (password !== confirmPassword) {
+        authActionBtn.disabled = false;
+        authActionBtn.textContent = originalLabel;
+        authError.textContent = 'Passwords do not match.';
+        return;
+      }
+      if (password.length < 4) {
+        authActionBtn.disabled = false;
+        authActionBtn.textContent = originalLabel;
+        authError.textContent = 'Password should be at least 4 characters.';
+        return;
+      }
+
+      const result = await createStoreAccount(storeName, password, lockboxCode);
+      authActionBtn.disabled = false;
+      authActionBtn.textContent = originalLabel;
+
+      if (result.ok) {
+        enterApp(storeName);
+      } else if (result.reason === 'taken') {
+        authError.textContent = 'That store name is already registered. Try logging in instead.';
+      } else {
+        authError.textContent = 'Could not create the account. Check your connection and try again.';
+      }
+    }
+  });
+
+  [authStoreNameInput, authPasswordInput, authConfirmPasswordInput, authLockboxCodeInput].forEach(input => {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        authActionBtn.click();
+      }
+    });
+  });
+
+  async function getSubmissions() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/inventory_submissions?select=*&order=submitted_at.desc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const rows = await res.json();
+      const data = rows.map(row => ({
+        id: row.id,
+        storeName: row.store_name,
+        timestamp: row.submitted_at,
+        byCategory: row.by_category,
+        totalItems: row.total_items,
+        totalUnits: row.total_units,
+        notes: row.notes
+      }));
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function saveSubmission(entry) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/inventory_submissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          store_name: entry.storeName,
+          submitted_at: entry.timestamp,
+          by_category: entry.byCategory,
+          total_items: entry.totalItems,
+          total_units: entry.totalUnits,
+          notes: entry.notes || null
+        })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteSubmission(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/inventory_submissions?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function clearAllSubmissions() {
+    try {
+      // Filter matches every row regardless of id value
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/inventory_submissions?id=not.is.null`,
+        {
+          method: 'DELETE',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  document.getElementById('orderForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const storeNameInput = document.getElementById('storeName');
+    const storeName = storeNameInput.value.trim();
+    const summaryDiv = document.getElementById('summary');
+    const notesValue = document.getElementById('storeNotes').value.trim();
+
+    if (!storeName) {
+      storeNameInput.focus();
+      storeNameInput.style.outline = '2px solid var(--accent-soft)';
+      summaryDiv.innerHTML = `<h2>Order Summary</h2><p class="empty-note">Please enter the store name before submitting.</p>`;
+      summaryDiv.style.display = 'block';
+      summaryDiv.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    const inputs = document.querySelectorAll('.qty-input');
+    const byCategory = {};
+    let itemsOrdered = 0;
+    let totalUnits = 0;
+
+    inputs.forEach(input => {
+      const qty = parseInt(input.value, 10) || 0;
+      const cat = input.dataset.category;
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push({ name: input.dataset.item, qty });
+      if (qty > 0) {
+        itemsOrdered++;
+        totalUnits += qty;
+      }
+    });
+
+    if (itemsOrdered === 0) {
+      summaryDiv.innerHTML = `<h2>Order Summary</h2><p class="empty-note">No quantities entered yet. Add at least one item before submitting.</p>`;
+      summaryDiv.style.display = 'block';
+      summaryDiv.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    const submitBtn = document.querySelector('#orderForm button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+
+    const saved = await saveSubmission({
+      storeName: storeName,
+      timestamp: new Date().toISOString(),
+      byCategory: byCategory,
+      totalItems: itemsOrdered,
+      totalUnits: totalUnits,
+      notes: notesValue
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit Order';
+
+    if (!saved) {
+      summaryDiv.innerHTML = `<h2>Order Summary</h2><p class="empty-note">Something went wrong sending this to shared storage. Check your connection and try submitting again.</p>`;
+      summaryDiv.style.display = 'block';
+      summaryDiv.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    let html = `<h2>Order Summary — ${escapeHtml(storeName)}</h2><ul>`;
+    Object.keys(byCategory).forEach(cat => {
+      html += `<span class="cat-label">${escapeHtml(cat)}</span>`;
+      byCategory[cat].forEach(entry => {
+        const oosTag = getStockTag(entry.qty);
+        html += `<li><span>${escapeHtml(entry.name)} ${oosTag}</span><span>${entry.qty}</span></li>`;
+      });
+    });
+    html += '</ul>';
+    html += `<div class="total-line">${itemsOrdered} product line${itemsOrdered > 1 ? 's' : ''} &middot; ${totalUnits} total unit${totalUnits > 1 ? 's' : ''}</div>`;
+    if (notesValue) {
+      html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${escapeHtml(notesValue)}</p></div>`;
+    }
+
+    summaryDiv.innerHTML = html;
+    summaryDiv.style.display = 'block';
+    summaryDiv.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // ---- Manager Mode ----
+  const managerModeBtn = document.getElementById('managerModeBtn');
+  const managerOverlay = document.getElementById('managerOverlay');
+  const managerPasswordInput = document.getElementById('managerPasswordInput');
+  const managerError = document.getElementById('managerError');
+  const managerCancelBtn = document.getElementById('managerCancelBtn');
+  const managerSubmitBtn = document.getElementById('managerSubmitBtn');
+  const managerExitBtn = document.getElementById('managerExitBtn');
+  const managerDashboard = document.getElementById('managerDashboard');
+  const orderForm = document.getElementById('orderForm');
+  const summaryEl = document.getElementById('summary');
+
+  function openManagerOverlay() {
+    managerPasswordInput.value = '';
+    managerError.textContent = '';
+    managerOverlay.classList.add('active');
+    setTimeout(() => managerPasswordInput.focus(), 50);
+  }
+
+  function closeManagerOverlay() {
+    managerOverlay.classList.remove('active');
+  }
+
+  async function tryManagerLogin() {
+    const attempted = managerPasswordInput.value;
+    managerSubmitBtn.disabled = true;
+    const ok = await verifyManagerPassword(attempted);
+    managerSubmitBtn.disabled = false;
+
+    if (ok) {
+      managerSessionPassword = attempted;
+      closeManagerOverlay();
+      showManagerDashboard();
+    } else {
+      managerError.textContent = 'Incorrect password. Try again.';
+      managerPasswordInput.value = '';
+      managerPasswordInput.focus();
+    }
+  }
+
+  function showManagerDashboard() {
+    authGate.style.display = 'none';
+    orderForm.style.display = 'none';
+    summaryEl.style.display = 'none';
+    managerModeBtn.style.display = 'none';
+    document.querySelector('header').style.display = 'none';
+    managerDashboard.classList.add('active');
+    switchDashboardTab('submissions');
+  }
+
+  function exitManagerDashboard() {
+    managerDashboard.classList.remove('active');
+    managerModeBtn.style.display = '';
+    document.querySelector('header').style.display = '';
+    managerSessionPassword = null;
+    if (currentStoreName) {
+      orderForm.style.display = '';
+    } else {
+      authGate.style.display = '';
+    }
+  }
+
+  const submissionsTabBtn = document.getElementById('submissionsTabBtn');
+  const accountsTabBtn = document.getElementById('accountsTabBtn');
+  const catalogTabBtn = document.getElementById('catalogTabBtn');
+  const routesTabBtn = document.getElementById('routesTabBtn');
+  const messagesTabBtn = document.getElementById('messagesTabBtn');
+  const compareTabBtn = document.getElementById('compareTabBtn');
+  const resourcesTabBtn = document.getElementById('resourcesTabBtn');
+  const emailTabBtn = document.getElementById('emailTabBtn');
+  const submissionsPanel = document.getElementById('submissionsPanel');
+  const accountsPanel = document.getElementById('accountsPanel');
+  const catalogPanel = document.getElementById('catalogPanel');
+  const routesPanel = document.getElementById('routesPanel');
+  const messagesPanel = document.getElementById('messagesPanel');
+  const comparePanel = document.getElementById('comparePanel');
+  const resourcesPanel = document.getElementById('resourcesPanel');
+  const emailPanel = document.getElementById('emailPanel');
+  const clearAllBtnEl = document.getElementById('clearAllBtn');
+
+  const ALL_TABS = [
+    { key: 'submissions', btn: submissionsTabBtn, panel: submissionsPanel, render: renderSubmissions },
+    { key: 'accounts', btn: accountsTabBtn, panel: accountsPanel, render: renderAccounts },
+    { key: 'catalog', btn: catalogTabBtn, panel: catalogPanel, render: renderCatalogManager },
+    { key: 'routes', btn: routesTabBtn, panel: routesPanel, render: function() { renderRoutesTab('all'); } },
+    { key: 'messages', btn: messagesTabBtn, panel: messagesPanel, render: renderMessagesTab },
+    { key: 'compare', btn: compareTabBtn, panel: comparePanel, render: renderCompareTab },
+    { key: 'resources', btn: resourcesTabBtn, panel: resourcesPanel, render: renderResourcesTab },
+    { key: 'email', btn: emailTabBtn, panel: emailPanel, render: renderEmailTab }
+  ];
+
+  function switchDashboardTab(tab) {
+    ALL_TABS.forEach(t => {
+      if (t.key === tab) {
+        t.btn.classList.add('active');
+        t.panel.classList.add('active');
+        t.render();
+      } else {
+        t.btn.classList.remove('active');
+        t.panel.classList.remove('active');
+      }
+    });
+    clearAllBtnEl.style.display = (tab === 'submissions') ? '' : 'none';
+  }
+
+  submissionsTabBtn.addEventListener('click', function() { switchDashboardTab('submissions'); });
+  accountsTabBtn.addEventListener('click', function() { switchDashboardTab('accounts'); });
+  catalogTabBtn.addEventListener('click', function() { switchDashboardTab('catalog'); });
+  routesTabBtn.addEventListener('click', function() { switchDashboardTab('routes'); });
+  messagesTabBtn.addEventListener('click', function() { switchDashboardTab('messages'); });
+  compareTabBtn.addEventListener('click', function() { switchDashboardTab('compare'); });
+  resourcesTabBtn.addEventListener('click', function() { switchDashboardTab('resources'); });
+  emailTabBtn.addEventListener('click', function() { switchDashboardTab('email'); });
+
+  // ---- Catalog manager (Manager Mode > Catalog tab) ----
+  const newItemNameInput = document.getElementById('newItemName');
+  const newItemCategorySelect = document.getElementById('newItemCategory');
+  const addItemBtn = document.getElementById('addItemBtn');
+  const addItemError = document.getElementById('addItemError');
+  const editItemOverlay = document.getElementById('editItemOverlay');
+  const editItemName = document.getElementById('editItemName');
+  const editItemCategory = document.getElementById('editItemCategory');
+  const editItemError = document.getElementById('editItemError');
+  const editItemCancelBtn = document.getElementById('editItemCancelBtn');
+  const editItemSaveBtn = document.getElementById('editItemSaveBtn');
+  let pendingEditItemId = null;
+
+  function populateCategorySelect(selectEl) {
+    selectEl.innerHTML = CATEGORY_ORDER.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+  populateCategorySelect(newItemCategorySelect);
+  populateCategorySelect(editItemCategory);
+
+  async function renderCatalogManager() {
+    const listEl = document.getElementById('catalogList');
+    listEl.innerHTML = '<p class="no-submissions">Loading catalog…</p>';
+
+    const result = await fetchCatalog();
+    if (!result.ok) {
+      listEl.innerHTML = '<p class="no-submissions">Could not load the catalog. Check your connection and reopen this tab.</p>';
+      return;
+    }
+
+    let html = '';
+    CATEGORY_ORDER.forEach(cat => {
+      const items = result.data.filter(r => r.category === cat);
+      html += `<div class="catalog-category-group"><h3>${cat} <span class="acct-meta">(${items.length})</span></h3>`;
+      if (items.length === 0) {
+        html += `<p class="no-submissions" style="padding:10px 0;">No items in this category yet.</p>`;
+      } else {
+        items.forEach(item => {
+          html += `<div class="catalog-item-row">
+            <span class="item-label">${escapeHtml(item.item_name)}</span>
+            <div class="account-actions">
+              <button type="button" class="btn-secondary edit-item-btn" data-id="${item.id}" data-name="${escapeHtml(item.item_name)}" data-category="${escapeHtml(item.category)}">Edit</button>
+              <button type="button" class="btn-secondary danger-link delete-item-btn" data-id="${item.id}" data-name="${escapeHtml(item.item_name)}">Delete</button>
+            </div>
+          </div>`;
+        });
+      }
+      html += `</div>`;
+    });
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.edit-item-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        openEditItem(btn.dataset.id, btn.dataset.name, btn.dataset.category);
+      });
+    });
+
+    listEl.querySelectorAll('.delete-item-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        openConfirm(
+          'Delete Item',
+          `This will permanently remove "${name}" from the catalog. Stores will no longer see it on the inventory form. This cannot be undone.`,
+          async function() {
+            const ok = await deleteCatalogItem(id);
+            if (ok) {
+              renderCatalogManager();
+              loadCatalog();
+            } else {
+              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    });
+  }
+
+  addItemBtn.addEventListener('click', async function() {
+    const name = newItemNameInput.value.trim();
+    const category = newItemCategorySelect.value;
+    addItemError.textContent = '';
+
+    if (!name) {
+      addItemError.textContent = 'Enter an item name.';
+      return;
+    }
+
+    addItemBtn.disabled = true;
+    addItemBtn.textContent = 'Adding…';
+    const ok = await createCatalogItem(category, name);
+    addItemBtn.disabled = false;
+    addItemBtn.textContent = 'Add';
+
+    if (ok) {
+      newItemNameInput.value = '';
+      renderCatalogManager();
+      loadCatalog();
+    } else {
+      addItemError.textContent = 'Could not add item. Check your connection and try again.';
+    }
+  });
+
+  newItemNameInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addItemBtn.click();
+    }
+  });
+
+  function openEditItem(id, name, category) {
+    pendingEditItemId = id;
+    editItemName.value = name;
+    editItemCategory.value = category;
+    editItemError.textContent = '';
+    editItemOverlay.classList.add('active');
+  }
+
+  function closeEditItem() {
+    editItemOverlay.classList.remove('active');
+    pendingEditItemId = null;
+  }
+
+  editItemCancelBtn.addEventListener('click', closeEditItem);
+  editItemOverlay.addEventListener('click', function(e) {
+    if (e.target === editItemOverlay) closeEditItem();
+  });
+
+  editItemSaveBtn.addEventListener('click', async function() {
+    const name = editItemName.value.trim();
+    const category = editItemCategory.value;
+
+    if (!name) {
+      editItemError.textContent = 'Enter an item name.';
+      return;
+    }
+
+    editItemSaveBtn.disabled = true;
+    editItemSaveBtn.textContent = 'Saving…';
+    const ok = await updateCatalogItem(pendingEditItemId, category, name);
+    editItemSaveBtn.disabled = false;
+    editItemSaveBtn.textContent = 'Save';
+
+    if (ok) {
+      closeEditItem();
+      renderCatalogManager();
+      loadCatalog();
+    } else {
+      editItemError.textContent = 'Could not save changes. Check your connection and try again.';
+    }
+  });
+
+  // ---- Routes tab ----
+  const newRouteNameInput = document.getElementById('newRouteName');
+  const addRouteBtn = document.getElementById('addRouteBtn');
+  const addRouteError = document.getElementById('addRouteError');
+  let currentRouteFilter = 'all';
+
+  async function renderRoutesTab(filter) {
+    currentRouteFilter = filter || currentRouteFilter;
+    const pillRow = document.getElementById('routePillRow');
+    const storesListEl = document.getElementById('routeStoresList');
+    pillRow.innerHTML = '<span class="no-submissions" style="padding:6px 0;">Loading routes…</span>';
+    storesListEl.innerHTML = '';
+
+    const [routesResult, accountsResult, submissionsResult] = await Promise.all([
+      fetchRoutes(),
+      fetchAllAccounts(),
+      getSubmissions()
+    ]);
+
+    if (!routesResult.ok || !accountsResult.ok) {
+      pillRow.innerHTML = '';
+      storesListEl.innerHTML = '<p class="no-submissions">Could not load routes. Check your connection and reopen this tab.</p>';
+      return;
+    }
+
+    const routes = routesResult.data;
+    const accounts = accountsResult.data;
+
+    // Build pill row
+    let pillHtml = `<button type="button" class="route-pill ${currentRouteFilter === 'all' ? 'active' : ''}" data-filter="all">All Stores</button>`;
+    routes.forEach(r => {
+      pillHtml += `<button type="button" class="route-pill ${currentRouteFilter === r.id ? 'active' : ''}" data-filter="${r.id}">${escapeHtml(r.route_name)}</button>`;
+    });
+    pillRow.innerHTML = pillHtml;
+
+    pillRow.querySelectorAll('.route-pill').forEach(pill => {
+      pill.addEventListener('click', function() {
+        renderRoutesTab(pill.dataset.filter);
+      });
+    });
+
+    // Filter accounts by route
+    let storesToShow;
+    if (currentRouteFilter === 'all') {
+      storesToShow = accounts;
+    } else {
+      storesToShow = accounts.filter(a => a.route_id === currentRouteFilter);
+    }
+
+    if (storesToShow.length === 0) {
+      storesListEl.innerHTML = '<p class="no-submissions">No stores assigned to this route yet. Assign stores from the Store Accounts tab.</p>';
+      return;
+    }
+
+    // Build a map of latest submission per store name
+    const latestByStore = {};
+    if (submissionsResult.ok) {
+      submissionsResult.data.forEach(sub => {
+        if (!latestByStore[sub.storeName]) {
+          latestByStore[sub.storeName] = sub; // already ordered most-recent-first
+        }
+      });
+    }
+
+    let html = '';
+    storesToShow.forEach(acct => {
+      const sub = latestByStore[acct.store_name];
+      const flagBadge = sub ? stockFlagBadgeHtml(sub.byCategory) : '';
+      html += `<div class="route-store-card">
+        <div class="sub-header collapsible-header">
+          <span class="chevron">▸</span>
+          <span class="store-title">${escapeHtml(acct.store_name)} ${flagBadge}</span>
+          <span class="timestamp">${acct.lockbox_code ? 'Lockbox: ' + escapeHtml(acct.lockbox_code) : ''}</span>
+        </div>
+        <div class="card-body">`;
+      if (!sub) {
+        html += `<p class="no-submissions" style="padding:6px 0;">No inventory submitted yet.</p>`;
+      } else {
+        Object.keys(sub.byCategory).forEach(cat => {
+          html += `<span class="cat-label">${escapeHtml(cat)}</span><ul>`;
+          sub.byCategory[cat].forEach(item => {
+            const oosTag = getStockTag(item.qty);
+            html += `<li><span>${escapeHtml(item.name)} ${oosTag}</span><span>${item.qty}</span></li>`;
+          });
+          html += `</ul>`;
+        });
+        html += `<div class="total-line" style="margin-top:10px;">${sub.totalItems} product line${sub.totalItems > 1 ? 's' : ''} &middot; ${sub.totalUnits} total unit${sub.totalUnits > 1 ? 's' : ''} &middot; submitted ${new Date(sub.timestamp).toLocaleString()}</div>`;
+        if (sub.notes) {
+          html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${escapeHtml(sub.notes)}</p></div>`;
+        }
+      }
+      html += `</div></div>`;
+    });
+
+    if (currentRouteFilter !== 'all') {
+      const route = routes.find(r => r.id === currentRouteFilter);
+      if (route) {
+        html += `<div style="text-align:center;margin-top:16px;"><button type="button" class="btn-secondary danger-link" id="deleteRouteBtn" data-id="${route.id}" data-name="${route.route_name}">Delete "${route.route_name}" Route</button></div>`;
+      }
+    }
+
+    storesListEl.innerHTML = html;
+
+    storesListEl.querySelectorAll('.route-store-card').forEach(card => {
+      const header = card.querySelector('.collapsible-header');
+      header.addEventListener('click', function(e) {
+        if (e.target.closest('button')) return;
+        card.classList.toggle('expanded');
+      });
+    });
+
+    const deleteRouteBtnEl = document.getElementById('deleteRouteBtn');
+    if (deleteRouteBtnEl) {
+      deleteRouteBtnEl.addEventListener('click', function() {
+        const id = deleteRouteBtnEl.dataset.id;
+        const name = deleteRouteBtnEl.dataset.name;
+        openConfirm(
+          'Delete Route',
+          `This will delete the "${name}" route. Stores assigned to it will become unassigned, not deleted. This cannot be undone.`,
+          async function() {
+            const ok = await deleteRoute(id);
+            if (ok) {
+              renderRoutesTab('all');
+            } else {
+              storesListEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete route — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    }
+  }
+
+  addRouteBtn.addEventListener('click', async function() {
+    const name = newRouteNameInput.value.trim();
+    addRouteError.textContent = '';
+    if (!name) {
+      addRouteError.textContent = 'Enter a route name.';
+      return;
+    }
+    addRouteBtn.disabled = true;
+    addRouteBtn.textContent = 'Creating…';
+    const ok = await createRoute(name);
+    addRouteBtn.disabled = false;
+    addRouteBtn.textContent = 'Create Route';
+
+    if (ok) {
+      newRouteNameInput.value = '';
+      renderRoutesTab('all');
+    } else {
+      addRouteError.textContent = 'Could not create route — it may already exist, or check your connection.';
+    }
+  });
+
+  newRouteNameInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addRouteBtn.click();
+    }
+  });
+
+  // ---- Compare Items tab ----
+  const itemSearchInput = document.getElementById('itemSearchInput');
+  const itemSearchSuggestions = document.getElementById('itemSearchSuggestions');
+  const selectedItemsChipsEl = document.getElementById('selectedItemsChips');
+  const itemCompareResultsEl = document.getElementById('itemCompareResults');
+  let selectedCompareItems = []; // [{category, item_name}]
+
+  function renderCompareTab() {
+    // Just render whatever's currently selected (persists across tab switches);
+    // catalog list comes from the already-loaded catalogRows.
+    renderSelectedChips();
+    renderCompareResults();
+  }
+
+  itemSearchInput.addEventListener('input', function() {
+    const q = itemSearchInput.value.trim().toLowerCase();
+    if (!q) {
+      itemSearchSuggestions.classList.remove('active');
+      itemSearchSuggestions.innerHTML = '';
+      return;
+    }
+    const matches = catalogRows.filter(row => {
+      const alreadySelected = selectedCompareItems.some(s => s.category === row.category && s.item_name === row.item_name);
+      return !alreadySelected && row.item_name.toLowerCase().includes(q);
+    }).slice(0, 8);
+
+    if (matches.length === 0) {
+      itemSearchSuggestions.innerHTML = '<div class="item-suggestion" style="color:var(--ink-soft);cursor:default;">No matching items</div>';
+      itemSearchSuggestions.classList.add('active');
+      return;
+    }
+
+    itemSearchSuggestions.innerHTML = matches.map(row =>
+      `<div class="item-suggestion" data-category="${escapeHtml(row.category)}" data-item="${escapeHtml(row.item_name)}">${escapeHtml(row.item_name)}<span class="suggestion-cat">${escapeHtml(row.category)}</span></div>`
+    ).join('');
+    itemSearchSuggestions.classList.add('active');
+
+    itemSearchSuggestions.querySelectorAll('.item-suggestion[data-item]').forEach(el => {
+      el.addEventListener('click', function() {
+        selectedCompareItems.push({ category: el.dataset.category, item_name: el.dataset.item });
+        itemSearchInput.value = '';
+        itemSearchSuggestions.classList.remove('active');
+        itemSearchSuggestions.innerHTML = '';
+        renderSelectedChips();
+        renderCompareResults();
+      });
+    });
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.compare-search-wrap')) {
+      itemSearchSuggestions.classList.remove('active');
+    }
+  });
+
+  function renderSelectedChips() {
+    if (selectedCompareItems.length === 0) {
+      selectedItemsChipsEl.innerHTML = '';
+      return;
+    }
+    selectedItemsChipsEl.innerHTML = selectedCompareItems.map((s, idx) =>
+      `<span class="item-chip">${escapeHtml(s.item_name)}<button type="button" data-idx="${idx}">✕</button></span>`
+    ).join('');
+    selectedItemsChipsEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', function() {
+        selectedCompareItems.splice(parseInt(btn.dataset.idx, 10), 1);
+        renderSelectedChips();
+        renderCompareResults();
+      });
+    });
+  }
+
+  async function renderCompareResults() {
+    if (selectedCompareItems.length === 0) {
+      itemCompareResultsEl.innerHTML = '<p class="no-submissions">Search and select items above to compare stock across stores.</p>';
+      return;
+    }
+
+    itemCompareResultsEl.innerHTML = '<p class="no-submissions">Loading…</p>';
+
+    const [subResult, adjResult] = await Promise.all([getSubmissions(), fetchAdjustments()]);
+    if (!subResult.ok) {
+      itemCompareResultsEl.innerHTML = '<p class="no-submissions">Could not load submissions. Check your connection.</p>';
+      return;
+    }
+
+    // Latest submission per store
+    const latestByStore = {};
+    subResult.data.forEach(sub => {
+      if (!latestByStore[sub.storeName]) latestByStore[sub.storeName] = sub;
+    });
+
+    const adjBySubmission = {};
+    if (adjResult.ok) {
+      adjResult.data.forEach(a => { adjBySubmission[a.submission_id] = a; });
+    }
+
+    let html = '';
+    selectedCompareItems.forEach(sel => {
+      html += `<div class="compare-item-group"><h3>${escapeHtml(sel.item_name)} <span class="acct-meta">(${escapeHtml(sel.category)})</span></h3>`;
+
+      const rows = [];
+      Object.keys(latestByStore).forEach(storeName => {
+        const sub = latestByStore[storeName];
+        const items = sub.byCategory[sel.category];
+        if (!items) return;
+        const match = items.find(i => i.name === sel.item_name);
+        if (!match) return;
+        const adjRecord = adjBySubmission[sub.id];
+        const adjMap = adjRecord ? adjustmentToMap(adjRecord.adjusted_by_category) : {};
+        const qty = effectiveQty(match.qty, adjMap, sel.category, sel.item_name);
+        rows.push({ storeName, qty });
+      });
+
+      if (rows.length === 0) {
+        html += `<p class="no-submissions" style="padding:6px 0;">No stores have submitted data for this item yet.</p></div>`;
+        return;
+      }
+
+      rows.sort((a, b) => b.qty - a.qty);
+      const maxQty = rows[0].qty;
+      const hasVariation = rows.some(r => r.qty !== maxQty);
+
+      rows.forEach(r => {
+        let cls = '';
+        if (hasVariation && r.qty === maxQty && maxQty > LOW_STOCK_THRESHOLD) cls = 'high';
+        else if (r.qty <= LOW_STOCK_THRESHOLD) cls = 'low';
+        html += `<div class="compare-store-row ${cls}">
+          <span class="compare-store-name">${escapeHtml(r.storeName)}</span>
+          <span class="compare-qty">${r.qty}</span>
+        </div>`;
+      });
+
+      html += `</div>`;
+    });
+
+    itemCompareResultsEl.innerHTML = html;
+  }
+
+  // ---- Resources tab (Manager Mode) ----
+  const newResourceTitle = document.getElementById('newResourceTitle');
+  const newResourceCategory = document.getElementById('newResourceCategory');
+  const newResourceContent = document.getElementById('newResourceContent');
+  const addResourceBtn = document.getElementById('addResourceBtn');
+  const addResourceError = document.getElementById('addResourceError');
+
+  async function renderResourcesTab() {
+    const listEl = document.getElementById('resourcesList');
+    listEl.innerHTML = '<p class="no-submissions">Loading resources…</p>';
+
+    const result = await fetchResources();
+    if (!result.ok) {
+      listEl.innerHTML = '<p class="no-submissions">Could not load resources. Check your connection and reopen this tab.</p>';
+      return;
+    }
+
+    if (result.data.length === 0) {
+      listEl.innerHTML = '<p class="no-submissions">No resources added yet. Use the form above to add your first one — FAQs, opening checklists, whatever stores need.</p>';
+      return;
+    }
+
+    // Group by category
+    const byCategory = {};
+    result.data.forEach(r => {
+      if (!byCategory[r.category]) byCategory[r.category] = [];
+      byCategory[r.category].push(r);
+    });
+
+    let html = '';
+    Object.keys(byCategory).sort().forEach(cat => {
+      html += `<div class="catalog-category-group"><h3>${escapeHtml(cat)}</h3>`;
+      byCategory[cat].forEach(res => {
+        const preview = res.content.length > 120 ? res.content.slice(0, 120) + '…' : res.content;
+        html += `<div class="catalog-item-row" style="align-items:flex-start;">
+          <span class="item-label"><strong>${escapeHtml(res.title)}</strong><br><span class="acct-meta">${escapeHtml(preview)}</span></span>
+          <div class="account-actions">
+            <button type="button" class="btn-secondary edit-resource-btn" data-id="${res.id}">Edit</button>
+            <button type="button" class="btn-secondary danger-link delete-resource-btn" data-id="${res.id}" data-title="${escapeHtml(res.title)}">Delete</button>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.edit-resource-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const res = result.data.find(r => r.id === btn.dataset.id);
+        openEditResource(res);
+      });
+    });
+
+    listEl.querySelectorAll('.delete-resource-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = btn.dataset.id;
+        const title = btn.dataset.title;
+        openConfirm(
+          'Delete Resource',
+          `This will permanently delete "${title}". This cannot be undone.`,
+          async function() {
+            const ok = await deleteResource(id);
+            if (ok) {
+              renderResourcesTab();
+            } else {
+              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    });
+  }
+
+  addResourceBtn.addEventListener('click', async function() {
+    const title = newResourceTitle.value.trim();
+    const category = newResourceCategory.value.trim() || 'General';
+    const content = newResourceContent.value.trim();
+    addResourceError.textContent = '';
+
+    if (!title || !content) {
+      addResourceError.textContent = 'Enter a title and content.';
+      return;
+    }
+
+    addResourceBtn.disabled = true;
+    addResourceBtn.textContent = 'Adding…';
+    const ok = await createResource(title, content, category);
+    addResourceBtn.disabled = false;
+    addResourceBtn.textContent = 'Add Resource';
+
+    if (ok) {
+      newResourceTitle.value = '';
+      newResourceCategory.value = '';
+      newResourceContent.value = '';
+      renderResourcesTab();
+    } else {
+      addResourceError.textContent = 'Could not add resource. Check your connection and try again.';
+    }
+  });
+
+  // ---- Edit resource modal ----
+  const editResourceOverlay = document.getElementById('editResourceOverlay');
+  const editResourceTitleInput = document.getElementById('editResourceTitle');
+  const editResourceCategoryInput = document.getElementById('editResourceCategory');
+  const editResourceContentInput = document.getElementById('editResourceContent');
+  const editResourceError = document.getElementById('editResourceError');
+  const editResourceCancelBtn = document.getElementById('editResourceCancelBtn');
+  const editResourceSaveBtn = document.getElementById('editResourceSaveBtn');
+  let pendingEditResourceId = null;
+
+  function openEditResource(res) {
+    pendingEditResourceId = res.id;
+    editResourceTitleInput.value = res.title;
+    editResourceCategoryInput.value = res.category;
+    editResourceContentInput.value = res.content;
+    editResourceError.textContent = '';
+    editResourceOverlay.classList.add('active');
+  }
+
+  function closeEditResource() {
+    editResourceOverlay.classList.remove('active');
+    pendingEditResourceId = null;
+  }
+
+  editResourceCancelBtn.addEventListener('click', closeEditResource);
+  editResourceOverlay.addEventListener('click', function(e) {
+    if (e.target === editResourceOverlay) closeEditResource();
+  });
+
+  editResourceSaveBtn.addEventListener('click', async function() {
+    const title = editResourceTitleInput.value.trim();
+    const category = editResourceCategoryInput.value.trim() || 'General';
+    const content = editResourceContentInput.value.trim();
+
+    if (!title || !content) {
+      editResourceError.textContent = 'Enter a title and content.';
+      return;
+    }
+
+    editResourceSaveBtn.disabled = true;
+    editResourceSaveBtn.textContent = 'Saving…';
+    const ok = await updateResource(pendingEditResourceId, title, content, category);
+    editResourceSaveBtn.disabled = false;
+    editResourceSaveBtn.textContent = 'Save';
+
+    if (ok) {
+      closeEditResource();
+      renderResourcesTab();
+    } else {
+      editResourceError.textContent = 'Could not save changes. Check your connection and try again.';
+    }
+  });
+
+  // ---- Email tab (Manager Mode) ----
+  const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  let selectedScheduleDays = [];
+
+  async function renderEmailTab() {
+    await Promise.all([renderRecipientsList(), renderScheduleSettings()]);
+    renderManualSendOptions();
+  }
+
+  async function renderRecipientsList() {
+    const listEl = document.getElementById('recipientsList');
+    listEl.innerHTML = '<p class="no-submissions">Loading…</p>';
+    const result = await fetchEmailRecipients();
+    if (!result.ok) {
+      listEl.innerHTML = '<p class="no-submissions">Could not load recipients. Check your connection.</p>';
+      return;
+    }
+    if (result.data.length === 0) {
+      listEl.innerHTML = '<p class="no-submissions">No recipients added yet.</p>';
+      return;
+    }
+    let html = '';
+    result.data.forEach(r => {
+      html += `<div class="recipient-row">
+        <span class="item-name">${escapeHtml(r.email)}</span>
+        <button type="button" class="btn-secondary danger-link delete-recipient-btn" data-id="${r.id}" data-email="${escapeHtml(r.email)}">Remove</button>
+      </div>`;
+    });
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.delete-recipient-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        openConfirm(
+          'Remove Recipient',
+          `Remove "${btn.dataset.email}" from the email list?`,
+          async function() {
+            const ok = await deleteEmailRecipient(btn.dataset.id);
+            if (ok) {
+              renderRecipientsList();
+            } else {
+              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not remove — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    });
+  }
+
+  document.getElementById('addRecipientBtn').addEventListener('click', async function() {
+    const input = document.getElementById('newRecipientEmail');
+    const errorEl = document.getElementById('addRecipientError');
+    const email = input.value.trim();
+    errorEl.textContent = '';
+
+    if (!email || !email.includes('@')) {
+      errorEl.textContent = 'Enter a valid email address.';
+      return;
+    }
+
+    const ok = await addEmailRecipient(email);
+    if (ok) {
+      input.value = '';
+      renderRecipientsList();
+    } else {
+      errorEl.textContent = 'Could not add — it may already be on the list, or check your connection.';
+    }
+  });
+
+  document.getElementById('newRecipientEmail').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('addRecipientBtn').click();
+    }
+  });
+
+  async function renderScheduleSettings() {
+    const dayRowEl = document.getElementById('dayCheckboxRow');
+    dayRowEl.innerHTML = DAY_LABELS.map((label, idx) =>
+      `<div class="day-checkbox" data-day="${idx}">${label}</div>`
+    ).join('');
+
+    const result = await fetchEmailSettings();
+    const settings = result.ok && result.data ? result.data : { auto_send_enabled: false, days_of_week: [], send_time: '17:00', last_auto_sent_date: null };
+
+    selectedScheduleDays = (settings.days_of_week || []).slice();
+    document.getElementById('autoSendToggle').checked = !!settings.auto_send_enabled;
+    document.getElementById('sendTimeInput').value = settings.send_time || '17:00';
+
+    const lastSentEl = document.getElementById('lastAutoSentLabel');
+    lastSentEl.textContent = settings.last_auto_sent_date
+      ? `Last automatic send: ${settings.last_auto_sent_date}`
+      : 'No automatic send has gone out yet.';
+
+    updateDayCheckboxDisplay();
+
+    dayRowEl.querySelectorAll('.day-checkbox').forEach(el => {
+      el.addEventListener('click', function() {
+        const day = parseInt(el.dataset.day, 10);
+        const idx = selectedScheduleDays.indexOf(day);
+        if (idx === -1) selectedScheduleDays.push(day);
+        else selectedScheduleDays.splice(idx, 1);
+        updateDayCheckboxDisplay();
+      });
+    });
+  }
+
+  function updateDayCheckboxDisplay() {
+    document.querySelectorAll('#dayCheckboxRow .day-checkbox').forEach(el => {
+      const day = parseInt(el.dataset.day, 10);
+      el.classList.toggle('active', selectedScheduleDays.includes(day));
+    });
+  }
+
+  document.getElementById('saveScheduleBtn').addEventListener('click', async function() {
+    const errorEl = document.getElementById('scheduleError');
+    errorEl.textContent = '';
+    const enabled = document.getElementById('autoSendToggle').checked;
+    const time = document.getElementById('sendTimeInput').value || '17:00';
+
+    if (enabled && selectedScheduleDays.length === 0) {
+      errorEl.textContent = 'Select at least one day, or turn off automatic sending.';
+      return;
+    }
+
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    const ok = await saveEmailSettings(enabled, selectedScheduleDays.slice().sort(), time);
+    btn.disabled = false;
+    btn.textContent = 'Save Schedule';
+
+    if (!ok) {
+      errorEl.textContent = 'Could not save the schedule. Check your connection and try again.';
+    }
+  });
+
+  function renderManualSendOptions() {
+    const selectEl = document.getElementById('manualSendDateSelect');
+    const days = Array.from(new Set(cachedSubmissions.map(s => dayKey(s.timestamp)))).sort().reverse();
+
+    if (days.length === 0) {
+      selectEl.innerHTML = '<option value="">No submissions yet</option>';
+      return;
+    }
+    selectEl.innerHTML = days.map(d => `<option value="${d}">${formatDayLabel(d)}</option>`).join('');
+  }
+
+  document.getElementById('manualSendBtn').addEventListener('click', async function() {
+    const selectEl = document.getElementById('manualSendDateSelect');
+    const statusEl = document.getElementById('manualSendStatus');
+    const errorEl = document.getElementById('manualSendError');
+    errorEl.textContent = '';
+    statusEl.textContent = '';
+
+    const dateKey = selectEl.value;
+    if (!dateKey) {
+      errorEl.textContent = 'No day selected.';
+      return;
+    }
+
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const result = await triggerDaySummaryEmail(dateKey);
+    btn.disabled = false;
+    btn.textContent = 'Send Day Summary Now';
+
+    if (result.ok && result.data && result.data.ok) {
+      statusEl.textContent = `Sent to ${result.data.sentTo} recipient${result.data.sentTo === 1 ? '' : 's'}.`;
+    } else {
+      const detail = (result.data && (result.data.error || result.data.skipped)) || 'Unknown error';
+      errorEl.textContent = `Could not send: ${detail}. Make sure the email function is deployed (see setup steps).`;
+    }
+  });
+
+  async function renderAccounts() {
+    const listEl = document.getElementById('accountsList');
+    listEl.innerHTML = '<p class="no-submissions">Loading store accounts…</p>';
+
+    const result = await fetchAllAccounts();
+    const routesResult = await fetchRoutes();
+    const routes = routesResult.ok ? routesResult.data : [];
+
+    if (!result.ok) {
+      listEl.innerHTML = '<p class="no-submissions">Could not reach the account system. Check your connection and reopen this tab to retry.</p>';
+      return;
+    }
+
+    if (result.data.length === 0) {
+      listEl.innerHTML = '<p class="no-submissions">No store accounts have been created yet.</p>';
+      return;
+    }
+
+    const routeOptions = routes.map(r => `<option value="${r.id}">${escapeHtml(r.route_name)}</option>`).join('');
+
+    let html = '';
+    result.data.forEach(acct => {
+      const created = new Date(acct.created_at).toLocaleDateString();
+      const lockboxDisplay = acct.lockbox_code ? escapeHtml(acct.lockbox_code) : '—';
+      html += `<div class="account-card">
+        <div class="account-info">
+          <span class="acct-name">${escapeHtml(acct.store_name)}</span>
+          <span class="acct-meta">Password: set (hidden) &middot; Lockbox: ${lockboxDisplay} &middot; Created ${created}</span>
+          <div class="acct-route-row">
+            <label class="acct-meta">Route:</label>
+            <select class="store-name-input route-select" data-id="${acct.id}" style="max-width:none;">
+              <option value="">No Route</option>
+              ${routeOptions}
+            </select>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button type="button" class="btn-secondary change-pw-btn" data-id="${acct.id}" data-name="${escapeHtml(acct.store_name)}">Change Password</button>
+          <button type="button" class="btn-secondary edit-lockbox-btn" data-id="${acct.id}" data-name="${escapeHtml(acct.store_name)}" data-lockbox="${escapeHtml(acct.lockbox_code || '')}">Edit Lockbox</button>
+          <button type="button" class="btn-secondary danger-link delete-account-btn" data-id="${acct.id}" data-name="${escapeHtml(acct.store_name)}">Delete</button>
+        </div>
+      </div>`;
+    });
+
+    listEl.innerHTML = html;
+
+    // Set each route select to the account's current route
+    result.data.forEach(acct => {
+      const sel = listEl.querySelector(`.route-select[data-id="${acct.id}"]`);
+      if (sel) sel.value = acct.route_id || '';
+    });
+
+    listEl.querySelectorAll('.route-select').forEach(sel => {
+      sel.addEventListener('change', async function() {
+        const ok = await updateAccountRoute(sel.dataset.id, sel.value || null);
+        if (!ok) {
+          listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not update route — check your connection and try again.</p>');
+        }
+      });
+    });
+
+    listEl.querySelectorAll('.change-pw-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        openChangePassword(btn.dataset.id, btn.dataset.name);
+      });
+    });
+
+    listEl.querySelectorAll('.edit-lockbox-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        openEditLockbox(btn.dataset.id, btn.dataset.name, btn.dataset.lockbox);
+      });
+    });
+
+    listEl.querySelectorAll('.delete-account-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        openConfirm(
+          'Delete Store Account',
+          `This will permanently delete the account for "${name}". They will need to create a new account to submit inventory again. This cannot be undone.`,
+          async function() {
+            const ok = await deleteAccount(id);
+            if (ok) {
+              renderAccounts();
+            } else {
+              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    });
+  }
+
+  // ---- Change password modal ----
+  const changePasswordOverlay = document.getElementById('changePasswordOverlay');
+  const changePasswordStoreLabel = document.getElementById('changePasswordStoreLabel');
+  const newPasswordInput = document.getElementById('newPasswordInput');
+  const changePasswordError = document.getElementById('changePasswordError');
+  const changePasswordCancelBtn = document.getElementById('changePasswordCancelBtn');
+  const changePasswordSaveBtn = document.getElementById('changePasswordSaveBtn');
+  let pendingChangePasswordId = null;
+
+  function openChangePassword(id, storeName) {
+    pendingChangePasswordId = id;
+    changePasswordStoreLabel.textContent = `Set a new password for "${storeName}".`;
+    newPasswordInput.value = '';
+    changePasswordError.textContent = '';
+    changePasswordOverlay.classList.add('active');
+    setTimeout(() => newPasswordInput.focus(), 50);
+  }
+
+  function closeChangePassword() {
+    changePasswordOverlay.classList.remove('active');
+    pendingChangePasswordId = null;
+  }
+
+  changePasswordCancelBtn.addEventListener('click', closeChangePassword);
+  changePasswordOverlay.addEventListener('click', function(e) {
+    if (e.target === changePasswordOverlay) closeChangePassword();
+  });
+
+  changePasswordSaveBtn.addEventListener('click', async function() {
+    const newPassword = newPasswordInput.value;
+    if (!newPassword || newPassword.length < 4) {
+      changePasswordError.textContent = 'Password should be at least 4 characters.';
+      return;
+    }
+    changePasswordSaveBtn.disabled = true;
+    changePasswordSaveBtn.textContent = 'Saving…';
+    const ok = await updateAccountPassword(pendingChangePasswordId, newPassword);
+    changePasswordSaveBtn.disabled = false;
+    changePasswordSaveBtn.textContent = 'Save';
+
+    if (ok) {
+      closeChangePassword();
+      renderAccounts();
+    } else {
+      changePasswordError.textContent = 'Could not update password. Check your connection and try again.';
+    }
+  });
+
+  newPasswordInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      changePasswordSaveBtn.click();
+    }
+  });
+
+  // ---- Edit lockbox code modal ----
+  const editLockboxOverlay = document.getElementById('editLockboxOverlay');
+  const editLockboxStoreLabel = document.getElementById('editLockboxStoreLabel');
+  const editLockboxInput = document.getElementById('editLockboxInput');
+  const editLockboxError = document.getElementById('editLockboxError');
+  const editLockboxCancelBtn = document.getElementById('editLockboxCancelBtn');
+  const editLockboxSaveBtn = document.getElementById('editLockboxSaveBtn');
+  let pendingLockboxId = null;
+
+  function openEditLockbox(id, storeName, currentCode) {
+    pendingLockboxId = id;
+    editLockboxStoreLabel.textContent = `Set the lockbox code for "${storeName}".`;
+    editLockboxInput.value = currentCode || '';
+    editLockboxError.textContent = '';
+    editLockboxOverlay.classList.add('active');
+    setTimeout(() => editLockboxInput.focus(), 50);
+  }
+
+  function closeEditLockbox() {
+    editLockboxOverlay.classList.remove('active');
+    pendingLockboxId = null;
+  }
+
+  editLockboxCancelBtn.addEventListener('click', closeEditLockbox);
+  editLockboxOverlay.addEventListener('click', function(e) {
+    if (e.target === editLockboxOverlay) closeEditLockbox();
+  });
+
+  editLockboxSaveBtn.addEventListener('click', async function() {
+    const code = editLockboxInput.value.trim();
+    editLockboxSaveBtn.disabled = true;
+    editLockboxSaveBtn.textContent = 'Saving…';
+    const ok = await updateAccountLockbox(pendingLockboxId, code);
+    editLockboxSaveBtn.disabled = false;
+    editLockboxSaveBtn.textContent = 'Save';
+
+    if (ok) {
+      closeEditLockbox();
+      renderAccounts();
+    } else {
+      editLockboxError.textContent = 'Could not save the lockbox code. Check your connection and try again.';
+    }
+  });
+
+  editLockboxInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      editLockboxSaveBtn.click();
+    }
+  });
+
+  let cachedSubmissions = [];
+  let cachedAdjBySubmission = {};
+  let currentSubmissionDateFilter = 'all';
+
+  function dayKey(timestamp) {
+    const d = new Date(timestamp);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function formatDayLabel(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  async function renderSubmissions() {
+    const listEl = document.getElementById('submissionsList');
+    const filterBarEl = document.getElementById('submissionsFilterBar');
+    listEl.innerHTML = '<p class="no-submissions">Loading submissions…</p>';
+    filterBarEl.innerHTML = '';
+
+    const [result, adjResult] = await Promise.all([getSubmissions(), fetchAdjustments()]);
+
+    if (!result.ok) {
+      listEl.innerHTML = '<p class="no-submissions">Could not reach shared storage. Check your connection and reopen Manager Mode to retry.</p>';
+      return;
+    }
+
+    cachedSubmissions = result.data; // already ordered most recent first by the query
+    cachedAdjBySubmission = {};
+    if (adjResult.ok) {
+      adjResult.data.forEach(a => { cachedAdjBySubmission[a.submission_id] = a; });
+    }
+
+    if (cachedSubmissions.length === 0) {
+      listEl.innerHTML = '<p class="no-submissions">No orders have been submitted yet.</p>';
+      return;
+    }
+
+    // Build the distinct list of days that have submissions, most recent first
+    const daySet = new Set();
+    cachedSubmissions.forEach(sub => daySet.add(dayKey(sub.timestamp)));
+    const days = Array.from(daySet).sort().reverse();
+
+    if (currentSubmissionDateFilter !== 'all' && !days.includes(currentSubmissionDateFilter)) {
+      currentSubmissionDateFilter = 'all';
+    }
+
+    let filterHtml = `<div class="date-filter-row">
+      <select id="submissionDateFilter" class="store-name-input">
+        <option value="all">All Days</option>`;
+    days.forEach(d => {
+      filterHtml += `<option value="${d}">${formatDayLabel(d)}</option>`;
+    });
+    filterHtml += `</select>
+      <button type="button" id="printDaySummaryBtn" class="btn-secondary">Print Day Summary</button>
+    </div>`;
+    filterBarEl.innerHTML = filterHtml;
+
+    const dateFilterEl = document.getElementById('submissionDateFilter');
+    dateFilterEl.value = currentSubmissionDateFilter;
+    dateFilterEl.addEventListener('change', function() {
+      currentSubmissionDateFilter = dateFilterEl.value;
+      renderSubmissionsList();
+    });
+    document.getElementById('printDaySummaryBtn').addEventListener('click', printDaySummary);
+
+    renderSubmissionsList();
+  }
+
+  function renderSubmissionsList() {
+    const listEl = document.getElementById('submissionsList');
+    const filtered = currentSubmissionDateFilter === 'all'
+      ? cachedSubmissions
+      : cachedSubmissions.filter(sub => dayKey(sub.timestamp) === currentSubmissionDateFilter);
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<p class="no-submissions">No submissions for this day.</p>';
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(sub => {
+      const dt = new Date(sub.timestamp);
+      const dateStr = dt.toLocaleString();
+      const adjRecord = cachedAdjBySubmission[sub.id];
+      const adjMap = adjRecord ? adjustmentToMap(adjRecord.adjusted_by_category) : {};
+      const effective = buildEffectiveByCategory(sub.byCategory, adjMap);
+      const flagBadge = stockFlagBadgeHtml(effective);
+      const adjustedTag = adjRecord ? '<span class="adjusted-tag">Adjusted</span>' : '';
+      html += `<div class="submission-card">
+        <div class="sub-header collapsible-header">
+          <span class="chevron">▸</span>
+          <span class="store-title">${escapeHtml(sub.storeName)} ${flagBadge} ${adjustedTag}</span>
+          <div class="sub-header-actions">
+            <span class="timestamp">${dateStr}</span>
+            <button type="button" class="btn-secondary edit-submission-btn" data-id="${sub.id}">Edit</button>
+            <button type="button" class="delete-submission-btn" data-id="${sub.id}">Delete</button>
+          </div>
+        </div>
+        <div class="card-body">`;
+      Object.keys(sub.byCategory).forEach(cat => {
+        html += `<span class="cat-label">${escapeHtml(cat)}</span><ul>`;
+        sub.byCategory[cat].forEach(item => {
+          const adjQty = effectiveQty(item.qty, adjMap, cat, item.name);
+          const oosTag = getStockTag(adjQty);
+          const adjustedDisplay = adjQty !== item.qty ? ` <span class="adjusted-qty">→ ${adjQty}</span>` : '';
+          html += `<li><span>${escapeHtml(item.name)} ${oosTag}</span><span>${item.qty}${adjustedDisplay}</span></li>`;
+        });
+        html += `</ul>`;
+      });
+      html += `<div class="total-line" style="margin-top:10px;">${sub.totalItems} product line${sub.totalItems > 1 ? 's' : ''} &middot; ${sub.totalUnits} total unit${sub.totalUnits > 1 ? 's' : ''}</div>`;
+      if (sub.notes) {
+        html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${escapeHtml(sub.notes)}</p></div>`;
+      }
+      if (adjRecord && adjRecord.note) {
+        html += `<div class="adjustment-note"><strong>Adjustment note:</strong> ${escapeHtml(adjRecord.note)}</div>`;
+      }
+      html += `</div></div>`;
+    });
+
+    listEl.innerHTML = html;
+
+    // Collapsible toggle: click header (but not action buttons) to expand/collapse
+    listEl.querySelectorAll('.submission-card').forEach(card => {
+      const header = card.querySelector('.collapsible-header');
+      header.addEventListener('click', function(e) {
+        if (e.target.closest('button')) return;
+        card.classList.toggle('expanded');
+      });
+    });
+
+    listEl.querySelectorAll('.edit-submission-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const sub = cachedSubmissions.find(s => s.id === btn.dataset.id);
+        const adjRecord = cachedAdjBySubmission[btn.dataset.id];
+        openEditSubmission(sub, adjRecord);
+      });
+    });
+
+    // Wire up delete buttons for this render pass
+    listEl.querySelectorAll('.delete-submission-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = btn.dataset.id;
+        openConfirm(
+          'Delete Submission',
+          'This will permanently delete this submission. This cannot be undone.',
+          async function() {
+            const ok = await deleteSubmission(id);
+            if (ok) {
+              renderSubmissions();
+            } else {
+              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    });
+  }
+
+  function printDaySummary() {
+    const filtered = currentSubmissionDateFilter === 'all'
+      ? cachedSubmissions
+      : cachedSubmissions.filter(sub => dayKey(sub.timestamp) === currentSubmissionDateFilter);
+
+    if (filtered.length === 0) return;
+
+    const dayLabel = currentSubmissionDateFilter === 'all' ? 'All Days' : formatDayLabel(currentSubmissionDateFilter);
+
+    let html = `<h1>Store Inventory Summary</h1>
+      <div class="print-meta">${dayLabel} &middot; Printed ${new Date().toLocaleString()} &middot; ${filtered.length} store${filtered.length > 1 ? 's' : ''}</div>`;
+
+    filtered.forEach(sub => {
+      const adjRecord = cachedAdjBySubmission[sub.id];
+      const adjMap = adjRecord ? adjustmentToMap(adjRecord.adjusted_by_category) : {};
+      html += `<h2>${escapeHtml(sub.storeName)} — submitted ${new Date(sub.timestamp).toLocaleString()}</h2>`;
+      html += `<table class="print-table"><thead><tr><th>Item</th><th>Qty</th></tr></thead><tbody>`;
+      Object.keys(sub.byCategory).forEach(cat => {
+        html += `<tr class="print-cat-row"><td colspan="2">${escapeHtml(cat)}</td></tr>`;
+        sub.byCategory[cat].forEach(item => {
+          const qty = effectiveQty(item.qty, adjMap, cat, item.name);
+          const flag = qty === 0 ? ' — Out of Stock' : (qty <= LOW_STOCK_THRESHOLD ? ' — Low' : '');
+          html += `<tr><td>${escapeHtml(item.name)}</td><td>${qty}${flag}</td></tr>`;
+        });
+      });
+      html += `</tbody></table>`;
+      if (sub.notes) {
+        html += `<p class="print-note"><strong>Notes:</strong> ${escapeHtml(sub.notes)}</p>`;
+      }
+      if (adjRecord && adjRecord.note) {
+        html += `<p class="print-note"><strong>Adjustment note:</strong> ${escapeHtml(adjRecord.note)}</p>`;
+      }
+    });
+
+    document.getElementById('printSummaryArea').innerHTML = html;
+    document.body.classList.add('printing');
+    window.print();
+  }
+
+  window.addEventListener('afterprint', function() {
+    document.body.classList.remove('printing');
+  });
+
+  // ---- Generic confirm modal (password-protected, used for all delete actions) ----
+  const confirmOverlay = document.getElementById('confirmOverlay');
+  const confirmTitle = document.getElementById('confirmTitle');
+  const confirmMessage = document.getElementById('confirmMessage');
+  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+  const confirmPasswordError = document.getElementById('confirmPasswordError');
+  const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+  const confirmOkBtn = document.getElementById('confirmOkBtn');
+  let pendingConfirmAction = null;
+
+  function openConfirm(title, message, onConfirm) {
+    confirmTitle.textContent = title;
+    confirmMessage.textContent = message;
+    pendingConfirmAction = onConfirm;
+    confirmPasswordInput.value = '';
+    confirmPasswordError.textContent = '';
+    confirmOverlay.classList.add('active');
+    setTimeout(() => confirmPasswordInput.focus(), 50);
+  }
+
+  function closeConfirm() {
+    confirmOverlay.classList.remove('active');
+    pendingConfirmAction = null;
+    confirmPasswordInput.value = '';
+    confirmPasswordError.textContent = '';
+  }
+
+  confirmCancelBtn.addEventListener('click', closeConfirm);
+  confirmOverlay.addEventListener('click', function(e) {
+    if (e.target === confirmOverlay) closeConfirm();
+  });
+  confirmOkBtn.addEventListener('click', async function() {
+    const attempted = confirmPasswordInput.value;
+    confirmOkBtn.disabled = true;
+    const ok = await verifyManagerPassword(attempted);
+    confirmOkBtn.disabled = false;
+
+    if (!ok) {
+      confirmPasswordError.textContent = 'Incorrect password.';
+      return;
+    }
+    managerSessionPassword = attempted;
+    const action = pendingConfirmAction;
+    closeConfirm();
+    if (action) await action();
+  });
+  confirmPasswordInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      confirmOkBtn.click();
+    }
+  });
+
+  // ---- Edit submission modal (correction/swap mode) ----
+  const editSubmissionOverlay = document.getElementById('editSubmissionOverlay');
+  const editSubmissionStoreLabel = document.getElementById('editSubmissionStoreLabel');
+  const editSubmissionItemsEl = document.getElementById('editSubmissionItems');
+  const editSubmissionNote = document.getElementById('editSubmissionNote');
+  const editSubmissionError = document.getElementById('editSubmissionError');
+  const editSubmissionCancelBtn = document.getElementById('editSubmissionCancelBtn');
+  const editSubmissionSaveBtn = document.getElementById('editSubmissionSaveBtn');
+  let pendingEditSubmission = null;
+  let pendingEditAdjustmentId = null;
+
+  function openEditSubmission(sub, adjRecord) {
+    pendingEditSubmission = sub;
+    pendingEditAdjustmentId = adjRecord ? adjRecord.id : null;
+    editSubmissionStoreLabel.textContent = `Adjusting inventory for "${sub.storeName}" — submitted ${new Date(sub.timestamp).toLocaleString()}.`;
+
+    const adjMap = adjRecord ? adjustmentToMap(adjRecord.adjusted_by_category) : {};
+    let html = '';
+    Object.keys(sub.byCategory).forEach(cat => {
+      html += `<span class="cat-label">${escapeHtml(cat)}</span>`;
+      sub.byCategory[cat].forEach(item => {
+        const key = cat + '||' + item.name;
+        const startVal = (key in adjMap) ? adjMap[key] : item.qty;
+        const inputId = 'editqty-' + slugify(cat) + '-' + slugify(item.name);
+        html += `<div class="edit-item-qty-row">
+          <span class="item-name-label">${escapeHtml(item.name)} <span class="acct-meta">(orig ${item.qty})</span></span>
+          <input type="number" min="0" step="1" class="store-name-input qty-input" id="${inputId}" data-category="${escapeHtml(cat)}" data-item="${escapeHtml(item.name)}" value="${startVal}">
+        </div>`;
+      });
+    });
+    editSubmissionItemsEl.innerHTML = html;
+    editSubmissionNote.value = (adjRecord && adjRecord.note) ? adjRecord.note : '';
+    editSubmissionError.textContent = '';
+    editSubmissionOverlay.classList.add('active');
+  }
+
+  function closeEditSubmission() {
+    editSubmissionOverlay.classList.remove('active');
+    pendingEditSubmission = null;
+    pendingEditAdjustmentId = null;
+  }
+
+  editSubmissionCancelBtn.addEventListener('click', closeEditSubmission);
+  editSubmissionOverlay.addEventListener('click', function(e) {
+    if (e.target === editSubmissionOverlay) closeEditSubmission();
+  });
+
+  editSubmissionSaveBtn.addEventListener('click', async function() {
+    if (!pendingEditSubmission) return;
+
+    const inputs = editSubmissionItemsEl.querySelectorAll('input[type="number"]');
+    const editedMap = {};
+    inputs.forEach(inp => {
+      const key = inp.dataset.category + '||' + inp.dataset.item;
+      editedMap[key] = parseInt(inp.value, 10) || 0;
+    });
+
+    const diff = computeAdjustmentDiff(pendingEditSubmission.byCategory, editedMap);
+    const note = editSubmissionNote.value.trim();
+
+    editSubmissionSaveBtn.disabled = true;
+    editSubmissionSaveBtn.textContent = 'Saving…';
+
+    let ok;
+    if (diffIsEmpty(diff)) {
+      ok = pendingEditAdjustmentId ? await deleteAdjustment(pendingEditAdjustmentId) : true;
+    } else {
+      ok = await saveAdjustment(pendingEditSubmission.id, pendingEditAdjustmentId, diff, note);
+    }
+
+    editSubmissionSaveBtn.disabled = false;
+    editSubmissionSaveBtn.textContent = 'Save Adjustment';
+
+    if (ok) {
+      closeEditSubmission();
+      renderSubmissions();
+    } else {
+      editSubmissionError.textContent = 'Could not save the adjustment. Check your connection and try again.';
+    }
+  });
+
+  document.getElementById('clearAllBtn').addEventListener('click', function() {
+    openConfirm(
+      'Clear All Submissions',
+      'This will permanently delete every submitted inventory from every store. This cannot be undone.',
+      async function() {
+        const listEl = document.getElementById('submissionsList');
+        listEl.innerHTML = '<p class="no-submissions">Clearing…</p>';
+        const ok = await clearAllSubmissions();
+        if (ok) {
+          renderSubmissions();
+        } else {
+          listEl.innerHTML = '<p class="no-submissions">Could not clear submissions — check your connection and try again.</p>';
+        }
+      }
+    );
+  });
+
+  managerModeBtn.addEventListener('click', openManagerOverlay);
+  managerCancelBtn.addEventListener('click', closeManagerOverlay);
+  managerSubmitBtn.addEventListener('click', tryManagerLogin);
+  managerExitBtn.addEventListener('click', exitManagerDashboard);
+  managerPasswordInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      tryManagerLogin();
+    }
+  });
+  managerOverlay.addEventListener('click', function(e) {
+    if (e.target === managerOverlay) closeManagerOverlay();
+  });
+
+  // ---- Messages tab (manager side) ----
+  async function renderMessagesTab() {
+    const listEl = document.getElementById('messagesList');
+    listEl.innerHTML = '<p class="no-submissions">Loading messages…</p>';
+
+    const result = await fetchAllMessages();
+    if (!result.ok) {
+      listEl.innerHTML = '<p class="no-submissions">Could not load messages. Check your connection and reopen this tab.</p>';
+      return;
+    }
+
+    if (result.data.length === 0) {
+      listEl.innerHTML = '<p class="no-submissions">No messages yet.</p>';
+      return;
+    }
+
+    let html = '';
+    result.data.forEach(msg => {
+      const needsReplyTag = !msg.reply ? '<span class="needs-reply-tag">Needs Reply</span>' : '';
+      html += `<div class="submission-card">
+        <div class="sub-header">
+          <span class="store-title">${escapeHtml(msg.store_name)} ${needsReplyTag}</span>
+          <span class="timestamp">${new Date(msg.created_at).toLocaleString()}</span>
+        </div>
+        <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${escapeHtml(msg.message)}</p>`;
+      if (msg.reply) {
+        html += `<div class="msg-reply">
+          <span class="msg-meta">Reply sent ${new Date(msg.replied_at).toLocaleString()}</span>
+          <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${escapeHtml(msg.reply)}</p>
+        </div>`;
+      }
+      html += `<div class="account-actions" style="margin-top:10px;">
+        <button type="button" class="btn-secondary reply-msg-btn" data-id="${msg.id}" data-name="${escapeHtml(msg.store_name)}">${msg.reply ? 'Edit Reply' : 'Reply'}</button>
+        <button type="button" class="btn-secondary danger-link delete-message-btn" data-id="${msg.id}" data-name="${escapeHtml(msg.store_name)}">Delete</button>
+      </div>
+      </div>`;
+    });
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.reply-msg-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        openReplyMessage(btn.dataset.id, btn.dataset.name);
+      });
+    });
+
+    listEl.querySelectorAll('.delete-message-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        openConfirm(
+          'Delete Message',
+          `This will permanently delete this message from "${name}", including any reply. This cannot be undone.`,
+          async function() {
+            const ok = await deleteMessage(id);
+            if (ok) {
+              renderMessagesTab();
+            } else {
+              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    });
+  }
+
+  const replyMessageOverlay = document.getElementById('replyMessageOverlay');
+  const replyMessageStoreLabel = document.getElementById('replyMessageStoreLabel');
+  const replyMessageInput = document.getElementById('replyMessageInput');
+  const replyMessageError = document.getElementById('replyMessageError');
+  const replyMessageCancelBtn = document.getElementById('replyMessageCancelBtn');
+  const replyMessageSaveBtn = document.getElementById('replyMessageSaveBtn');
+  let pendingReplyMessageId = null;
+
+  function openReplyMessage(id, storeName) {
+    pendingReplyMessageId = id;
+    replyMessageStoreLabel.textContent = `Replying to "${storeName}".`;
+    replyMessageInput.value = '';
+    replyMessageError.textContent = '';
+    replyMessageOverlay.classList.add('active');
+    setTimeout(() => replyMessageInput.focus(), 50);
+  }
+
+  function closeReplyMessage() {
+    replyMessageOverlay.classList.remove('active');
+    pendingReplyMessageId = null;
+  }
+
+  replyMessageCancelBtn.addEventListener('click', closeReplyMessage);
+  replyMessageOverlay.addEventListener('click', function(e) {
+    if (e.target === replyMessageOverlay) closeReplyMessage();
+  });
+
+  replyMessageSaveBtn.addEventListener('click', async function() {
+    const text = replyMessageInput.value.trim();
+    if (!text) {
+      replyMessageError.textContent = 'Enter a reply before sending.';
+      return;
+    }
+    replyMessageSaveBtn.disabled = true;
+    replyMessageSaveBtn.textContent = 'Sending…';
+    const ok = await replyToMessage(pendingReplyMessageId, text);
+    replyMessageSaveBtn.disabled = false;
+    replyMessageSaveBtn.textContent = 'Send Reply';
+
+    if (ok) {
+      closeReplyMessage();
+      renderMessagesTab();
+    } else {
+      replyMessageError.textContent = 'Could not send reply. Check your connection and try again.';
+    }
+  });
+
+  // ---- Store-facing messages panel ----
+  const openMessagesBtn = document.getElementById('openMessagesBtn');
+  const storeMessagesOverlay = document.getElementById('storeMessagesOverlay');
+  const storeMessagesThread = document.getElementById('storeMessagesThread');
+  const newStoreMessageInput = document.getElementById('newStoreMessageInput');
+  const storeMessageError = document.getElementById('storeMessageError');
+  const sendStoreMessageBtn = document.getElementById('sendStoreMessageBtn');
+  const storeMessagesCloseBtn = document.getElementById('storeMessagesCloseBtn');
+
+  // ---- Store-facing Resources page (full page) ----
+  const openResourcesBtn = document.getElementById('openResourcesBtn');
+  const storeResourcesPage = document.getElementById('storeResourcesPage');
+  const storeResourcesList = document.getElementById('storeResourcesList');
+  const storeResourcesCloseBtn = document.getElementById('storeResourcesCloseBtn');
+
+  async function loadStoreResources() {
+    storeResourcesList.innerHTML = '<p class="no-submissions">Loading…</p>';
+    const result = await fetchResources();
+    if (!result.ok) {
+      storeResourcesList.innerHTML = '<p class="no-submissions">Could not load resources. Check your connection.</p>';
+      return;
+    }
+    if (result.data.length === 0) {
+      storeResourcesList.innerHTML = '<p class="no-submissions">No resources yet — check back soon.</p>';
+      return;
+    }
+    const byCategory = {};
+    result.data.forEach(r => {
+      if (!byCategory[r.category]) byCategory[r.category] = [];
+      byCategory[r.category].push(r);
+    });
+    let html = '';
+    Object.keys(byCategory).sort().forEach(cat => {
+      html += `<div class="catalog-category-group"><h3>${escapeHtml(cat)}</h3>`;
+      byCategory[cat].forEach(res => {
+        html += `<div class="resource-card">
+          <h4>${escapeHtml(res.title)}</h4>
+          <p>${escapeHtml(res.content)}</p>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    storeResourcesList.innerHTML = html;
+  }
+
+  function openStoreResourcesPage() {
+    document.querySelector('header').style.display = 'none';
+    orderFormEl.style.display = 'none';
+    document.getElementById('summary').style.display = 'none';
+    storeResourcesPage.classList.add('active');
+    loadStoreResources();
+  }
+
+  function closeStoreResourcesPage() {
+    storeResourcesPage.classList.remove('active');
+    document.querySelector('header').style.display = '';
+    orderFormEl.style.display = '';
+  }
+
+  openResourcesBtn.addEventListener('click', openStoreResourcesPage);
+  storeResourcesCloseBtn.addEventListener('click', closeStoreResourcesPage);
+
+  async function loadStoreMessages() {
+    storeMessagesThread.innerHTML = '<p class="no-submissions">Loading messages…</p>';
+    const result = await fetchAllMessages();
+    if (!result.ok) {
+      storeMessagesThread.innerHTML = '<p class="no-submissions">Could not load messages. Check your connection.</p>';
+      return;
+    }
+    const mine = result.data.filter(m => m.store_name === currentStoreName);
+    if (mine.length === 0) {
+      storeMessagesThread.innerHTML = '<p class="no-submissions">No messages yet.</p>';
+      return;
+    }
+    let html = '';
+    mine.forEach(msg => {
+      html += `<div class="message-item">
+        <div class="msg-meta">You &middot; ${new Date(msg.created_at).toLocaleString()}</div>
+        <p class="msg-text">${escapeHtml(msg.message)}</p>`;
+      if (msg.reply) {
+        html += `<div class="msg-reply">
+          <div class="msg-meta">Dewey's Team &middot; ${new Date(msg.replied_at).toLocaleString()}</div>
+          <p class="msg-text">${escapeHtml(msg.reply)}</p>
+        </div>`;
+      }
+      html += `</div>`;
+    });
+    storeMessagesThread.innerHTML = html;
+  }
+
+  openMessagesBtn.addEventListener('click', function() {
+    storeMessageError.textContent = '';
+    newStoreMessageInput.value = '';
+    storeMessagesOverlay.classList.add('active');
+    loadStoreMessages();
+  });
+
+  storeMessagesCloseBtn.addEventListener('click', function() {
+    storeMessagesOverlay.classList.remove('active');
+  });
+
+  storeMessagesOverlay.addEventListener('click', function(e) {
+    if (e.target === storeMessagesOverlay) storeMessagesOverlay.classList.remove('active');
+  });
+
+  sendStoreMessageBtn.addEventListener('click', async function() {
+    const text = newStoreMessageInput.value.trim();
+    if (!text) {
+      storeMessageError.textContent = 'Type a message before sending.';
+      return;
+    }
+    sendStoreMessageBtn.disabled = true;
+    sendStoreMessageBtn.textContent = 'Sending…';
+    const ok = await sendMessage(currentStoreName, text);
+    sendStoreMessageBtn.disabled = false;
+    sendStoreMessageBtn.textContent = 'Send';
+
+    if (ok) {
+      newStoreMessageInput.value = '';
+      storeMessageError.textContent = '';
+      loadStoreMessages();
+    } else {
+      storeMessageError.textContent = 'Could not send message. Check your connection and try again.';
+    }
+  });
+
+  // Kick off catalog loading now that every function and constant above is defined
+  loadCatalog();
+</script>
+
+</body>
+</html>
