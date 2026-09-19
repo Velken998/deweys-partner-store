@@ -885,6 +885,26 @@
     vertical-align: middle;
   }
 
+  .count-type-tag {
+    display: inline-block;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .count-type-tag.daily {
+    color: var(--accent-soft);
+    border-color: rgba(207,122,60,0.45);
+  }
+
   .summary-notes {
     margin-top: 14px;
     padding-top: 10px;
@@ -1302,6 +1322,13 @@
         <label class="item-name" for="storeName">Store Name</label>
         <input type="text" id="storeName" name="storeName" class="store-name-input" readonly>
       </div>
+      <div class="item-row store-name-row">
+        <label class="item-name" for="countType">Submitting</label>
+        <select id="countType" name="countType" class="store-name-input">
+          <option value="weekly">Weekly Count</option>
+          <option value="daily">Daily Count</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -1374,6 +1401,17 @@
   </div>
 
   <div id="catalogPanel" class="tab-panel">
+    <div class="account-card" style="margin-bottom:18px;">
+      <div class="account-info" style="flex:1;">
+        <span class="acct-name" style="margin-bottom:6px;">Categories</span>
+        <div class="add-item-row">
+          <input type="text" id="newCategoryName" class="store-name-input" placeholder="Category name" style="max-width:none;flex:1;">
+          <button type="button" id="addCategoryBtn" class="btn-primary">Add Category</button>
+        </div>
+        <div class="modal-error" id="addCategoryError"></div>
+        <div id="categoryManagerList" style="margin-top:8px;"></div>
+      </div>
+    </div>
     <div class="account-card" style="margin-bottom:18px;">
       <div class="account-info" style="flex:1;">
         <span class="acct-name" style="margin-bottom:6px;">Add Item</span>
@@ -1630,6 +1668,21 @@
     return html;
   }
 
+  // A submission's count_type is 'daily' or 'weekly'; anything missing/unrecognized reads as weekly
+  // (covers rows saved before this field existed).
+  function normalizeCountType(countType) {
+    return countType === 'daily' ? 'daily' : 'weekly';
+  }
+
+  function countTypeLabel(countType) {
+    return normalizeCountType(countType) === 'daily' ? 'Daily' : 'Weekly';
+  }
+
+  function countTypeTagHtml(countType) {
+    const type = normalizeCountType(countType);
+    return `<span class="count-type-tag ${type}">${countTypeLabel(type)}</span>`;
+  }
+
   // Build a quick-lookup map from an adjustment's sparse byCategory diff: "Category||Item" -> qty
   function adjustmentToMap(adjustedByCategory) {
     const map = {};
@@ -1681,42 +1734,19 @@
     return effective;
   }
 
-  const CATEGORY_ORDER = [
-    "Tubes",
-    "Cheese Straws",
-    "Seasonal Gable Box",
-    "Cookie Tins",
-    "Dewzies",
-    "Cookie Trays",
-    "Cakes",
-    "Oatmeal Cookies",
-    "Merchandise"
-  ];
-
   function slugify(str) {
     return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
 
-  // Escapes text before it's dropped into innerHTML. Used for any string that
-  // originated from a store, a manager form, or the database (store names,
-  // item names, resource titles, emails, etc.) rather than a literal we wrote.
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
   const container = document.getElementById('categoryContainer');
   let catalogRows = []; // flat list of {id, category, item_name} from Supabase
+  let categoryRows = []; // flat list of {id, name, sort_order} from Supabase
 
   function renderCategoryForm() {
     container.innerHTML = '';
 
-    CATEGORY_ORDER.forEach(categoryName => {
+    categoryRows.forEach(cat => {
+      const categoryName = cat.name;
       const items = catalogRows.filter(r => r.category === categoryName);
       if (items.length === 0) return;
 
@@ -1736,8 +1766,8 @@
         const rowDiv = document.createElement('div');
         rowDiv.className = 'item-row';
         rowDiv.innerHTML = `
-          <label class="item-name" for="${inputId}">${escapeHtml(row.item_name)}</label>
-          <input type="number" class="qty-input" id="${inputId}" name="${inputId}" min="0" step="1" value="0" data-item="${escapeHtml(row.item_name)}" data-category="${escapeHtml(categoryName)}">
+          <label class="item-name" for="${inputId}">${row.item_name}</label>
+          <input type="number" class="qty-input" id="${inputId}" name="${inputId}" min="0" step="1" value="0" data-item="${row.item_name}" data-category="${categoryName}">
         `;
         itemsDiv.appendChild(rowDiv);
       });
@@ -1749,59 +1779,26 @@
 
   async function loadCatalog() {
     container.innerHTML = '<p class="no-submissions">Loading catalog…</p>';
-    const result = await fetchCatalog();
-    if (!result.ok) {
+    const [catResult, catalogResult] = await Promise.all([fetchCategories(), fetchCatalog()]);
+    if (!catResult.ok || !catalogResult.ok) {
       container.innerHTML = '<p class="no-submissions">Could not load the item catalog. Check your connection and reload the page.</p>';
       return;
     }
-    catalogRows = result.data;
+    categoryRows = catResult.data;
+    catalogRows = catalogResult.data;
     renderCategoryForm();
   }
 
+  const MANAGER_PASSWORD = "DEWEYS1930!!";
   const SUPABASE_URL = "https://nrvulyhenqjnxteovond.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ydnVseWhlbnFqbnh0ZW92b25kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMTY5ODUsImV4cCI6MjA5OTU5Mjk4NX0.i_aJUbuWdYZc51Wu0L1dqlttir6c42zcNW2S25mbOW0";
-
-  // The manager password now lives only in the database (hashed), never in this file.
-  // After a successful Manager Mode login we keep the entered password in memory for
-  // this browser tab only, so later manager actions (delete, change password, etc.)
-  // can re-prove manager identity to the database without asking again mid-session.
-  let managerSessionPassword = null;
-
-  // ---- Server-verified auth (RPC calls to Postgres functions — see the Supabase
-  // migration for verify_login / verify_manager / create_store_account / etc.) ----
-
-  async function callRpc(fnName, args) {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fnName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify(args || {})
-      });
-      if (!res.ok) return { ok: false, error: 'network' };
-      const data = await res.json();
-      return { ok: true, data };
-    } catch (err) {
-      return { ok: false, error: 'network' };
-    }
-  }
-
-  async function verifyManagerPassword(password) {
-    const result = await callRpc('verify_manager', { p_password: password });
-    return result.ok && result.data === true;
-  }
 
   // ---- Store accounts ----
 
   async function fetchAllAccounts() {
     try {
-      // store_accounts_safe is a view with no password/password_hash column at all —
-      // see the Supabase migration. The base table itself has no anon SELECT policy.
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/store_accounts_safe?select=*&order=store_name.asc`,
+        `${SUPABASE_URL}/rest/v1/store_accounts?select=*&order=store_name.asc`,
         {
           headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -1818,66 +1815,105 @@
   }
 
   async function createStoreAccount(storeName, password, lockboxCode) {
-    // Uniqueness + password hashing both happen inside the create_store_account
-    // Postgres function now, so there's no read-then-write race and the plaintext
-    // password never round-trips through a table row.
-    const result = await callRpc('create_store_account', {
-      p_store_name: storeName,
-      p_password: password,
-      p_lockbox_code: lockboxCode || null
-    });
-    if (!result.ok) return { ok: false, reason: 'error' };
-    const row = Array.isArray(result.data) ? result.data[0] : result.data;
-    if (!row || !row.ok) return { ok: false, reason: (row && row.reason) || 'error' };
-    return { ok: true };
+    const existing = await fetchAllAccounts();
+    if (existing.ok) {
+      const taken = existing.data.some(a => a.store_name.toLowerCase() === storeName.toLowerCase());
+      if (taken) return { ok: false, reason: 'taken' };
+    }
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_accounts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ store_name: storeName, password: password, lockbox_code: lockboxCode || null })
+      });
+      if (!res.ok) return { ok: false, reason: 'error' };
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, reason: 'error' };
+    }
   }
 
   async function verifyLogin(storeName, password) {
-    // The password check happens server-side against the hashed value; this
-    // request never sees or transmits any other store's data.
-    const result = await callRpc('verify_login', { p_store_name: storeName, p_password: password });
+    const result = await fetchAllAccounts();
     if (!result.ok) return { ok: false, reason: 'network' };
-    const row = Array.isArray(result.data) ? result.data[0] : result.data;
-    if (!row) return { ok: false, reason: 'network' };
-    if (!row.ok) return { ok: false, reason: row.reason || 'bad_password' };
-    return { ok: true, storeName: row.store_name };
+    const match = result.data.find(a => a.store_name.toLowerCase() === storeName.toLowerCase());
+    if (!match) return { ok: false, reason: 'not_found' };
+    if (match.password !== password) return { ok: false, reason: 'bad_password' };
+    return { ok: true, storeName: match.store_name };
   }
 
   async function updateAccountPassword(id, newPassword) {
-    const result = await callRpc('change_store_password', {
-      p_account_id: id,
-      p_new_password: newPassword,
-      p_manager_password: managerSessionPassword
-    });
-    return result.ok && result.data === true;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_accounts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ password: newPassword })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
   }
 
   async function updateAccountLockbox(id, lockboxCode) {
-    // Lockbox codes are physical-access credentials, so this goes through the
-    // same manager-gated RPC path as passwords rather than a direct table write.
-    const result = await callRpc('change_store_lockbox', {
-      p_account_id: id,
-      p_lockbox_code: lockboxCode || null,
-      p_manager_password: managerSessionPassword
-    });
-    return result.ok && result.data === true;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_accounts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ lockbox_code: lockboxCode || null })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
   }
 
   async function updateAccountRoute(id, routeId) {
-    const result = await callRpc('change_store_route', {
-      p_account_id: id,
-      p_route_id: routeId || null,
-      p_manager_password: managerSessionPassword
-    });
-    return result.ok && result.data === true;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_accounts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ route_id: routeId || null })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
   }
 
   async function deleteAccount(id) {
-    const result = await callRpc('delete_store_account', {
-      p_account_id: id,
-      p_manager_password: managerSessionPassword
-    });
-    return result.ok && result.data === true;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_accounts?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
   }
 
   // ---- Routes ----
@@ -2259,6 +2295,60 @@
     }
   }
 
+  // ---- Categories ----
+
+  async function fetchCategories() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/categories?select=*&order=sort_order.asc,name.asc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function createCategory(name, sortOrder) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ name: name, sort_order: sortOrder })
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function deleteCategory(id) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/categories?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      return res.ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
   // ---- Catalog items ----
 
   async function fetchCatalog() {
@@ -2485,7 +2575,8 @@
         byCategory: row.by_category,
         totalItems: row.total_items,
         totalUnits: row.total_units,
-        notes: row.notes
+        notes: row.notes,
+        countType: row.count_type
       }));
       return { ok: true, data };
     } catch (err) {
@@ -2509,7 +2600,8 @@
           by_category: entry.byCategory,
           total_items: entry.totalItems,
           total_units: entry.totalUnits,
-          notes: entry.notes || null
+          notes: entry.notes || null,
+          count_type: entry.countType || 'weekly'
         })
       });
       return res.ok;
@@ -2559,6 +2651,7 @@
     const storeName = storeNameInput.value.trim();
     const summaryDiv = document.getElementById('summary');
     const notesValue = document.getElementById('storeNotes').value.trim();
+    const countTypeValue = document.getElementById('countType').value;
 
     if (!storeName) {
       storeNameInput.focus();
@@ -2602,7 +2695,8 @@
       byCategory: byCategory,
       totalItems: itemsOrdered,
       totalUnits: totalUnits,
-      notes: notesValue
+      notes: notesValue,
+      countType: countTypeValue
     });
 
     submitBtn.disabled = false;
@@ -2615,18 +2709,18 @@
       return;
     }
 
-    let html = `<h2>Order Summary — ${escapeHtml(storeName)}</h2><ul>`;
+    let html = `<h2>Order Summary — ${storeName} ${countTypeTagHtml(countTypeValue)}</h2><ul>`;
     Object.keys(byCategory).forEach(cat => {
-      html += `<span class="cat-label">${escapeHtml(cat)}</span>`;
+      html += `<span class="cat-label">${cat}</span>`;
       byCategory[cat].forEach(entry => {
         const oosTag = getStockTag(entry.qty);
-        html += `<li><span>${escapeHtml(entry.name)} ${oosTag}</span><span>${entry.qty}</span></li>`;
+        html += `<li><span>${entry.name} ${oosTag}</span><span>${entry.qty}</span></li>`;
       });
     });
     html += '</ul>';
     html += `<div class="total-line">${itemsOrdered} product line${itemsOrdered > 1 ? 's' : ''} &middot; ${totalUnits} total unit${totalUnits > 1 ? 's' : ''}</div>`;
     if (notesValue) {
-      html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${escapeHtml(notesValue)}</p></div>`;
+      html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${notesValue.replace(/</g, '&lt;')}</p></div>`;
     }
 
     summaryDiv.innerHTML = html;
@@ -2657,14 +2751,8 @@
     managerOverlay.classList.remove('active');
   }
 
-  async function tryManagerLogin() {
-    const attempted = managerPasswordInput.value;
-    managerSubmitBtn.disabled = true;
-    const ok = await verifyManagerPassword(attempted);
-    managerSubmitBtn.disabled = false;
-
-    if (ok) {
-      managerSessionPassword = attempted;
+  function tryManagerLogin() {
+    if (managerPasswordInput.value === MANAGER_PASSWORD) {
       closeManagerOverlay();
       showManagerDashboard();
     } else {
@@ -2688,7 +2776,6 @@
     managerDashboard.classList.remove('active');
     managerModeBtn.style.display = '';
     document.querySelector('header').style.display = '';
-    managerSessionPassword = null;
     if (currentStoreName) {
       orderForm.style.display = '';
     } else {
@@ -2762,34 +2849,126 @@
   let pendingEditItemId = null;
 
   function populateCategorySelect(selectEl) {
-    selectEl.innerHTML = CATEGORY_ORDER.map(c => `<option value="${c}">${c}</option>`).join('');
+    const previousValue = selectEl.value;
+    selectEl.innerHTML = categoryRows.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    if (categoryRows.some(c => c.name === previousValue)) {
+      selectEl.value = previousValue;
+    }
   }
-  populateCategorySelect(newItemCategorySelect);
-  populateCategorySelect(editItemCategory);
 
-  async function renderCatalogManager() {
-    const listEl = document.getElementById('catalogList');
-    listEl.innerHTML = '<p class="no-submissions">Loading catalog…</p>';
+  // ---- Category manager (Manager Mode > Catalog tab) ----
+  const newCategoryNameInput = document.getElementById('newCategoryName');
+  const addCategoryBtn = document.getElementById('addCategoryBtn');
+  const addCategoryError = document.getElementById('addCategoryError');
 
-    const result = await fetchCatalog();
-    if (!result.ok) {
-      listEl.innerHTML = '<p class="no-submissions">Could not load the catalog. Check your connection and reopen this tab.</p>';
+  function renderCategoryManagerList(catalogItems) {
+    const listEl = document.getElementById('categoryManagerList');
+    if (categoryRows.length === 0) {
+      listEl.innerHTML = '<p class="no-submissions" style="padding:6px 0;">No categories yet — add one above.</p>';
       return;
     }
 
     let html = '';
-    CATEGORY_ORDER.forEach(cat => {
-      const items = result.data.filter(r => r.category === cat);
-      html += `<div class="catalog-category-group"><h3>${cat} <span class="acct-meta">(${items.length})</span></h3>`;
+    categoryRows.forEach(cat => {
+      const count = catalogItems.filter(r => r.category === cat.name).length;
+      const canDelete = count === 0;
+      html += `<div class="catalog-item-row">
+        <span class="item-label">${cat.name} <span class="acct-meta">(${count} item${count === 1 ? '' : 's'})</span></span>
+        <div class="account-actions">
+          <button type="button" class="btn-secondary danger-link delete-category-btn" data-id="${cat.id}" data-name="${cat.name}" ${canDelete ? '' : 'disabled title="Move or delete this category\'s items first"'}>Delete</button>
+        </div>
+      </div>`;
+    });
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.delete-category-btn:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        openConfirm(
+          'Delete Category',
+          `This will permanently remove the "${name}" category. This cannot be undone.`,
+          async function() {
+            const ok = await deleteCategory(id);
+            if (ok) {
+              renderCatalogManager();
+              loadCatalog();
+            } else {
+              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete — check your connection and try again.</p>');
+            }
+          }
+        );
+      });
+    });
+  }
+
+  addCategoryBtn.addEventListener('click', async function() {
+    const name = newCategoryNameInput.value.trim();
+    addCategoryError.textContent = '';
+
+    if (!name) {
+      addCategoryError.textContent = 'Enter a category name.';
+      return;
+    }
+    if (categoryRows.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      addCategoryError.textContent = 'That category already exists.';
+      return;
+    }
+
+    addCategoryBtn.disabled = true;
+    addCategoryBtn.textContent = 'Adding…';
+    const nextSortOrder = categoryRows.length ? Math.max(...categoryRows.map(c => c.sort_order)) + 1 : 0;
+    const ok = await createCategory(name, nextSortOrder);
+    addCategoryBtn.disabled = false;
+    addCategoryBtn.textContent = 'Add Category';
+
+    if (ok) {
+      newCategoryNameInput.value = '';
+      renderCatalogManager();
+      loadCatalog();
+    } else {
+      addCategoryError.textContent = 'Could not add category. Check your connection and try again.';
+    }
+  });
+
+  newCategoryNameInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCategoryBtn.click();
+    }
+  });
+
+  async function renderCatalogManager() {
+    const listEl = document.getElementById('catalogList');
+    listEl.innerHTML = '<p class="no-submissions">Loading catalog…</p>';
+    document.getElementById('categoryManagerList').innerHTML = '<p class="no-submissions" style="padding:6px 0;">Loading categories…</p>';
+
+    const [catResult, result] = await Promise.all([fetchCategories(), fetchCatalog()]);
+    if (!catResult.ok || !result.ok) {
+      listEl.innerHTML = '<p class="no-submissions">Could not load the catalog. Check your connection and reopen this tab.</p>';
+      document.getElementById('categoryManagerList').innerHTML = '';
+      return;
+    }
+
+    categoryRows = catResult.data;
+    catalogRows = result.data;
+    populateCategorySelect(newItemCategorySelect);
+    populateCategorySelect(editItemCategory);
+    renderCategoryManagerList(result.data);
+
+    let html = '';
+    categoryRows.forEach(cat => {
+      const items = result.data.filter(r => r.category === cat.name);
+      html += `<div class="catalog-category-group"><h3>${cat.name} <span class="acct-meta">(${items.length})</span></h3>`;
       if (items.length === 0) {
         html += `<p class="no-submissions" style="padding:10px 0;">No items in this category yet.</p>`;
       } else {
         items.forEach(item => {
           html += `<div class="catalog-item-row">
-            <span class="item-label">${escapeHtml(item.item_name)}</span>
+            <span class="item-label">${item.item_name}</span>
             <div class="account-actions">
-              <button type="button" class="btn-secondary edit-item-btn" data-id="${item.id}" data-name="${escapeHtml(item.item_name)}" data-category="${escapeHtml(item.category)}">Edit</button>
-              <button type="button" class="btn-secondary danger-link delete-item-btn" data-id="${item.id}" data-name="${escapeHtml(item.item_name)}">Delete</button>
+              <button type="button" class="btn-secondary edit-item-btn" data-id="${item.id}" data-name="${item.item_name}" data-category="${item.category}">Edit</button>
+              <button type="button" class="btn-secondary danger-link delete-item-btn" data-id="${item.id}" data-name="${item.item_name}">Delete</button>
             </div>
           </div>`;
         });
@@ -2931,7 +3110,7 @@
     // Build pill row
     let pillHtml = `<button type="button" class="route-pill ${currentRouteFilter === 'all' ? 'active' : ''}" data-filter="all">All Stores</button>`;
     routes.forEach(r => {
-      pillHtml += `<button type="button" class="route-pill ${currentRouteFilter === r.id ? 'active' : ''}" data-filter="${r.id}">${escapeHtml(r.route_name)}</button>`;
+      pillHtml += `<button type="button" class="route-pill ${currentRouteFilter === r.id ? 'active' : ''}" data-filter="${r.id}">${r.route_name}</button>`;
     });
     pillRow.innerHTML = pillHtml;
 
@@ -2968,27 +3147,28 @@
     storesToShow.forEach(acct => {
       const sub = latestByStore[acct.store_name];
       const flagBadge = sub ? stockFlagBadgeHtml(sub.byCategory) : '';
+      const typeTag = sub ? countTypeTagHtml(sub.countType) : '';
       html += `<div class="route-store-card">
         <div class="sub-header collapsible-header">
           <span class="chevron">▸</span>
-          <span class="store-title">${escapeHtml(acct.store_name)} ${flagBadge}</span>
-          <span class="timestamp">${acct.lockbox_code ? 'Lockbox: ' + escapeHtml(acct.lockbox_code) : ''}</span>
+          <span class="store-title">${acct.store_name} ${typeTag} ${flagBadge}</span>
+          <span class="timestamp">${acct.lockbox_code ? 'Lockbox: ' + acct.lockbox_code : ''}</span>
         </div>
         <div class="card-body">`;
       if (!sub) {
         html += `<p class="no-submissions" style="padding:6px 0;">No inventory submitted yet.</p>`;
       } else {
         Object.keys(sub.byCategory).forEach(cat => {
-          html += `<span class="cat-label">${escapeHtml(cat)}</span><ul>`;
+          html += `<span class="cat-label">${cat}</span><ul>`;
           sub.byCategory[cat].forEach(item => {
             const oosTag = getStockTag(item.qty);
-            html += `<li><span>${escapeHtml(item.name)} ${oosTag}</span><span>${item.qty}</span></li>`;
+            html += `<li><span>${item.name} ${oosTag}</span><span>${item.qty}</span></li>`;
           });
           html += `</ul>`;
         });
         html += `<div class="total-line" style="margin-top:10px;">${sub.totalItems} product line${sub.totalItems > 1 ? 's' : ''} &middot; ${sub.totalUnits} total unit${sub.totalUnits > 1 ? 's' : ''} &middot; submitted ${new Date(sub.timestamp).toLocaleString()}</div>`;
         if (sub.notes) {
-          html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${escapeHtml(sub.notes)}</p></div>`;
+          html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${sub.notes.replace(/</g, '&lt;')}</p></div>`;
         }
       }
       html += `</div></div>`;
@@ -3093,7 +3273,7 @@
     }
 
     itemSearchSuggestions.innerHTML = matches.map(row =>
-      `<div class="item-suggestion" data-category="${escapeHtml(row.category)}" data-item="${escapeHtml(row.item_name)}">${escapeHtml(row.item_name)}<span class="suggestion-cat">${escapeHtml(row.category)}</span></div>`
+      `<div class="item-suggestion" data-category="${row.category}" data-item="${row.item_name}">${row.item_name}<span class="suggestion-cat">${row.category}</span></div>`
     ).join('');
     itemSearchSuggestions.classList.add('active');
 
@@ -3121,7 +3301,7 @@
       return;
     }
     selectedItemsChipsEl.innerHTML = selectedCompareItems.map((s, idx) =>
-      `<span class="item-chip">${escapeHtml(s.item_name)}<button type="button" data-idx="${idx}">✕</button></span>`
+      `<span class="item-chip">${s.item_name}<button type="button" data-idx="${idx}">✕</button></span>`
     ).join('');
     selectedItemsChipsEl.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', function() {
@@ -3159,7 +3339,7 @@
 
     let html = '';
     selectedCompareItems.forEach(sel => {
-      html += `<div class="compare-item-group"><h3>${escapeHtml(sel.item_name)} <span class="acct-meta">(${escapeHtml(sel.category)})</span></h3>`;
+      html += `<div class="compare-item-group"><h3>${sel.item_name} <span class="acct-meta">(${sel.category})</span></h3>`;
 
       const rows = [];
       Object.keys(latestByStore).forEach(storeName => {
@@ -3188,7 +3368,7 @@
         if (hasVariation && r.qty === maxQty && maxQty > LOW_STOCK_THRESHOLD) cls = 'high';
         else if (r.qty <= LOW_STOCK_THRESHOLD) cls = 'low';
         html += `<div class="compare-store-row ${cls}">
-          <span class="compare-store-name">${escapeHtml(r.storeName)}</span>
+          <span class="compare-store-name">${r.storeName}</span>
           <span class="compare-qty">${r.qty}</span>
         </div>`;
       });
@@ -3230,14 +3410,13 @@
 
     let html = '';
     Object.keys(byCategory).sort().forEach(cat => {
-      html += `<div class="catalog-category-group"><h3>${escapeHtml(cat)}</h3>`;
+      html += `<div class="catalog-category-group"><h3>${cat}</h3>`;
       byCategory[cat].forEach(res => {
-        const preview = res.content.length > 120 ? res.content.slice(0, 120) + '…' : res.content;
         html += `<div class="catalog-item-row" style="align-items:flex-start;">
-          <span class="item-label"><strong>${escapeHtml(res.title)}</strong><br><span class="acct-meta">${escapeHtml(preview)}</span></span>
+          <span class="item-label"><strong>${res.title}</strong><br><span class="acct-meta">${res.content.replace(/</g, '&lt;').slice(0, 120)}${res.content.length > 120 ? '…' : ''}</span></span>
           <div class="account-actions">
             <button type="button" class="btn-secondary edit-resource-btn" data-id="${res.id}">Edit</button>
-            <button type="button" class="btn-secondary danger-link delete-resource-btn" data-id="${res.id}" data-title="${escapeHtml(res.title)}">Delete</button>
+            <button type="button" class="btn-secondary danger-link delete-resource-btn" data-id="${res.id}" data-title="${res.title}">Delete</button>
           </div>
         </div>`;
       });
@@ -3377,8 +3556,8 @@
     let html = '';
     result.data.forEach(r => {
       html += `<div class="recipient-row">
-        <span class="item-name">${escapeHtml(r.email)}</span>
-        <button type="button" class="btn-secondary danger-link delete-recipient-btn" data-id="${r.id}" data-email="${escapeHtml(r.email)}">Remove</button>
+        <span class="item-name">${r.email}</span>
+        <button type="button" class="btn-secondary danger-link delete-recipient-btn" data-id="${r.id}" data-email="${r.email}">Remove</button>
       </div>`;
     });
     listEl.innerHTML = html;
@@ -3546,16 +3725,16 @@
       return;
     }
 
-    const routeOptions = routes.map(r => `<option value="${r.id}">${escapeHtml(r.route_name)}</option>`).join('');
+    const routeOptions = routes.map(r => `<option value="${r.id}">${r.route_name}</option>`).join('');
 
     let html = '';
     result.data.forEach(acct => {
       const created = new Date(acct.created_at).toLocaleDateString();
-      const lockboxDisplay = acct.lockbox_code ? escapeHtml(acct.lockbox_code) : '—';
+      const lockboxDisplay = acct.lockbox_code ? acct.lockbox_code : '—';
       html += `<div class="account-card">
         <div class="account-info">
-          <span class="acct-name">${escapeHtml(acct.store_name)}</span>
-          <span class="acct-meta">Password: set (hidden) &middot; Lockbox: ${lockboxDisplay} &middot; Created ${created}</span>
+          <span class="acct-name">${acct.store_name}</span>
+          <span class="acct-meta">Password: ${acct.password} &middot; Lockbox: ${lockboxDisplay} &middot; Created ${created}</span>
           <div class="acct-route-row">
             <label class="acct-meta">Route:</label>
             <select class="store-name-input route-select" data-id="${acct.id}" style="max-width:none;">
@@ -3565,9 +3744,9 @@
           </div>
         </div>
         <div class="account-actions">
-          <button type="button" class="btn-secondary change-pw-btn" data-id="${acct.id}" data-name="${escapeHtml(acct.store_name)}">Change Password</button>
-          <button type="button" class="btn-secondary edit-lockbox-btn" data-id="${acct.id}" data-name="${escapeHtml(acct.store_name)}" data-lockbox="${escapeHtml(acct.lockbox_code || '')}">Edit Lockbox</button>
-          <button type="button" class="btn-secondary danger-link delete-account-btn" data-id="${acct.id}" data-name="${escapeHtml(acct.store_name)}">Delete</button>
+          <button type="button" class="btn-secondary change-pw-btn" data-id="${acct.id}" data-name="${acct.store_name}">Change Password</button>
+          <button type="button" class="btn-secondary edit-lockbox-btn" data-id="${acct.id}" data-name="${acct.store_name}" data-lockbox="${acct.lockbox_code || ''}">Edit Lockbox</button>
+          <button type="button" class="btn-secondary danger-link delete-account-btn" data-id="${acct.id}" data-name="${acct.store_name}">Delete</button>
         </div>
       </div>`;
     });
@@ -3730,6 +3909,7 @@
   let cachedSubmissions = [];
   let cachedAdjBySubmission = {};
   let currentSubmissionDateFilter = 'all';
+  let currentSubmissionTypeFilter = 'all';
 
   function dayKey(timestamp) {
     const d = new Date(timestamp);
@@ -3782,6 +3962,11 @@
       filterHtml += `<option value="${d}">${formatDayLabel(d)}</option>`;
     });
     filterHtml += `</select>
+      <select id="submissionTypeFilter" class="store-name-input">
+        <option value="all">All Types</option>
+        <option value="weekly">Weekly Only</option>
+        <option value="daily">Daily Only</option>
+      </select>
       <button type="button" id="printDaySummaryBtn" class="btn-secondary">Print Day Summary</button>
     </div>`;
     filterBarEl.innerHTML = filterHtml;
@@ -3792,6 +3977,12 @@
       currentSubmissionDateFilter = dateFilterEl.value;
       renderSubmissionsList();
     });
+    const typeFilterEl = document.getElementById('submissionTypeFilter');
+    typeFilterEl.value = currentSubmissionTypeFilter;
+    typeFilterEl.addEventListener('change', function() {
+      currentSubmissionTypeFilter = typeFilterEl.value;
+      renderSubmissionsList();
+    });
     document.getElementById('printDaySummaryBtn').addEventListener('click', printDaySummary);
 
     renderSubmissionsList();
@@ -3799,12 +3990,15 @@
 
   function renderSubmissionsList() {
     const listEl = document.getElementById('submissionsList');
-    const filtered = currentSubmissionDateFilter === 'all'
+    let filtered = currentSubmissionDateFilter === 'all'
       ? cachedSubmissions
       : cachedSubmissions.filter(sub => dayKey(sub.timestamp) === currentSubmissionDateFilter);
+    if (currentSubmissionTypeFilter !== 'all') {
+      filtered = filtered.filter(sub => normalizeCountType(sub.countType) === currentSubmissionTypeFilter);
+    }
 
     if (filtered.length === 0) {
-      listEl.innerHTML = '<p class="no-submissions">No submissions for this day.</p>';
+      listEl.innerHTML = '<p class="no-submissions">No submissions match these filters.</p>';
       return;
     }
 
@@ -3820,7 +4014,7 @@
       html += `<div class="submission-card">
         <div class="sub-header collapsible-header">
           <span class="chevron">▸</span>
-          <span class="store-title">${escapeHtml(sub.storeName)} ${flagBadge} ${adjustedTag}</span>
+          <span class="store-title">${sub.storeName} ${countTypeTagHtml(sub.countType)} ${flagBadge} ${adjustedTag}</span>
           <div class="sub-header-actions">
             <span class="timestamp">${dateStr}</span>
             <button type="button" class="btn-secondary edit-submission-btn" data-id="${sub.id}">Edit</button>
@@ -3829,21 +4023,21 @@
         </div>
         <div class="card-body">`;
       Object.keys(sub.byCategory).forEach(cat => {
-        html += `<span class="cat-label">${escapeHtml(cat)}</span><ul>`;
+        html += `<span class="cat-label">${cat}</span><ul>`;
         sub.byCategory[cat].forEach(item => {
           const adjQty = effectiveQty(item.qty, adjMap, cat, item.name);
           const oosTag = getStockTag(adjQty);
           const adjustedDisplay = adjQty !== item.qty ? ` <span class="adjusted-qty">→ ${adjQty}</span>` : '';
-          html += `<li><span>${escapeHtml(item.name)} ${oosTag}</span><span>${item.qty}${adjustedDisplay}</span></li>`;
+          html += `<li><span>${item.name} ${oosTag}</span><span>${item.qty}${adjustedDisplay}</span></li>`;
         });
         html += `</ul>`;
       });
       html += `<div class="total-line" style="margin-top:10px;">${sub.totalItems} product line${sub.totalItems > 1 ? 's' : ''} &middot; ${sub.totalUnits} total unit${sub.totalUnits > 1 ? 's' : ''}</div>`;
       if (sub.notes) {
-        html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${escapeHtml(sub.notes)}</p></div>`;
+        html += `<div class="summary-notes"><span class="cat-label">Notes</span><p>${sub.notes.replace(/</g, '&lt;')}</p></div>`;
       }
       if (adjRecord && adjRecord.note) {
-        html += `<div class="adjustment-note"><strong>Adjustment note:</strong> ${escapeHtml(adjRecord.note)}</div>`;
+        html += `<div class="adjustment-note"><strong>Adjustment note:</strong> ${adjRecord.note.replace(/</g, '&lt;')}</div>`;
       }
       html += `</div></div>`;
     });
@@ -3888,36 +4082,40 @@
   }
 
   function printDaySummary() {
-    const filtered = currentSubmissionDateFilter === 'all'
+    let filtered = currentSubmissionDateFilter === 'all'
       ? cachedSubmissions
       : cachedSubmissions.filter(sub => dayKey(sub.timestamp) === currentSubmissionDateFilter);
+    if (currentSubmissionTypeFilter !== 'all') {
+      filtered = filtered.filter(sub => normalizeCountType(sub.countType) === currentSubmissionTypeFilter);
+    }
 
     if (filtered.length === 0) return;
 
     const dayLabel = currentSubmissionDateFilter === 'all' ? 'All Days' : formatDayLabel(currentSubmissionDateFilter);
+    const typeLabel = currentSubmissionTypeFilter === 'all' ? '' : ` &middot; ${currentSubmissionTypeFilter === 'daily' ? 'Daily' : 'Weekly'} Only`;
 
     let html = `<h1>Store Inventory Summary</h1>
-      <div class="print-meta">${dayLabel} &middot; Printed ${new Date().toLocaleString()} &middot; ${filtered.length} store${filtered.length > 1 ? 's' : ''}</div>`;
+      <div class="print-meta">${dayLabel}${typeLabel} &middot; Printed ${new Date().toLocaleString()} &middot; ${filtered.length} store${filtered.length > 1 ? 's' : ''}</div>`;
 
     filtered.forEach(sub => {
       const adjRecord = cachedAdjBySubmission[sub.id];
       const adjMap = adjRecord ? adjustmentToMap(adjRecord.adjusted_by_category) : {};
-      html += `<h2>${escapeHtml(sub.storeName)} — submitted ${new Date(sub.timestamp).toLocaleString()}</h2>`;
+      html += `<h2>${sub.storeName} (${countTypeLabel(sub.countType)}) — submitted ${new Date(sub.timestamp).toLocaleString()}</h2>`;
       html += `<table class="print-table"><thead><tr><th>Item</th><th>Qty</th></tr></thead><tbody>`;
       Object.keys(sub.byCategory).forEach(cat => {
-        html += `<tr class="print-cat-row"><td colspan="2">${escapeHtml(cat)}</td></tr>`;
+        html += `<tr class="print-cat-row"><td colspan="2">${cat}</td></tr>`;
         sub.byCategory[cat].forEach(item => {
           const qty = effectiveQty(item.qty, adjMap, cat, item.name);
           const flag = qty === 0 ? ' — Out of Stock' : (qty <= LOW_STOCK_THRESHOLD ? ' — Low' : '');
-          html += `<tr><td>${escapeHtml(item.name)}</td><td>${qty}${flag}</td></tr>`;
+          html += `<tr><td>${item.name}</td><td>${qty}${flag}</td></tr>`;
         });
       });
       html += `</tbody></table>`;
       if (sub.notes) {
-        html += `<p class="print-note"><strong>Notes:</strong> ${escapeHtml(sub.notes)}</p>`;
+        html += `<p class="print-note"><strong>Notes:</strong> ${sub.notes.replace(/</g, '&lt;')}</p>`;
       }
       if (adjRecord && adjRecord.note) {
-        html += `<p class="print-note"><strong>Adjustment note:</strong> ${escapeHtml(adjRecord.note)}</p>`;
+        html += `<p class="print-note"><strong>Adjustment note:</strong> ${adjRecord.note.replace(/</g, '&lt;')}</p>`;
       }
     });
 
@@ -3962,16 +4160,10 @@
     if (e.target === confirmOverlay) closeConfirm();
   });
   confirmOkBtn.addEventListener('click', async function() {
-    const attempted = confirmPasswordInput.value;
-    confirmOkBtn.disabled = true;
-    const ok = await verifyManagerPassword(attempted);
-    confirmOkBtn.disabled = false;
-
-    if (!ok) {
+    if (confirmPasswordInput.value !== MANAGER_PASSWORD) {
       confirmPasswordError.textContent = 'Incorrect password.';
       return;
     }
-    managerSessionPassword = attempted;
     const action = pendingConfirmAction;
     closeConfirm();
     if (action) await action();
@@ -4002,14 +4194,14 @@
     const adjMap = adjRecord ? adjustmentToMap(adjRecord.adjusted_by_category) : {};
     let html = '';
     Object.keys(sub.byCategory).forEach(cat => {
-      html += `<span class="cat-label">${escapeHtml(cat)}</span>`;
+      html += `<span class="cat-label">${cat}</span>`;
       sub.byCategory[cat].forEach(item => {
         const key = cat + '||' + item.name;
         const startVal = (key in adjMap) ? adjMap[key] : item.qty;
         const inputId = 'editqty-' + slugify(cat) + '-' + slugify(item.name);
         html += `<div class="edit-item-qty-row">
-          <span class="item-name-label">${escapeHtml(item.name)} <span class="acct-meta">(orig ${item.qty})</span></span>
-          <input type="number" min="0" step="1" class="store-name-input qty-input" id="${inputId}" data-category="${escapeHtml(cat)}" data-item="${escapeHtml(item.name)}" value="${startVal}">
+          <span class="item-name-label">${item.name} <span class="acct-meta">(orig ${item.qty})</span></span>
+          <input type="number" min="0" step="1" class="store-name-input qty-input" id="${inputId}" data-category="${cat}" data-item="${item.name}" value="${startVal}">
         </div>`;
       });
     });
@@ -4116,19 +4308,19 @@
       const needsReplyTag = !msg.reply ? '<span class="needs-reply-tag">Needs Reply</span>' : '';
       html += `<div class="submission-card">
         <div class="sub-header">
-          <span class="store-title">${escapeHtml(msg.store_name)} ${needsReplyTag}</span>
+          <span class="store-title">${msg.store_name} ${needsReplyTag}</span>
           <span class="timestamp">${new Date(msg.created_at).toLocaleString()}</span>
         </div>
-        <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${escapeHtml(msg.message)}</p>`;
+        <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${msg.message.replace(/</g, '&lt;')}</p>`;
       if (msg.reply) {
         html += `<div class="msg-reply">
           <span class="msg-meta">Reply sent ${new Date(msg.replied_at).toLocaleString()}</span>
-          <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${escapeHtml(msg.reply)}</p>
+          <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${msg.reply.replace(/</g, '&lt;')}</p>
         </div>`;
       }
       html += `<div class="account-actions" style="margin-top:10px;">
-        <button type="button" class="btn-secondary reply-msg-btn" data-id="${msg.id}" data-name="${escapeHtml(msg.store_name)}">${msg.reply ? 'Edit Reply' : 'Reply'}</button>
-        <button type="button" class="btn-secondary danger-link delete-message-btn" data-id="${msg.id}" data-name="${escapeHtml(msg.store_name)}">Delete</button>
+        <button type="button" class="btn-secondary reply-msg-btn" data-id="${msg.id}" data-name="${msg.store_name}">${msg.reply ? 'Edit Reply' : 'Reply'}</button>
+        <button type="button" class="btn-secondary danger-link delete-message-btn" data-id="${msg.id}" data-name="${msg.store_name}">Delete</button>
       </div>
       </div>`;
     });
@@ -4241,11 +4433,11 @@
     });
     let html = '';
     Object.keys(byCategory).sort().forEach(cat => {
-      html += `<div class="catalog-category-group"><h3>${escapeHtml(cat)}</h3>`;
+      html += `<div class="catalog-category-group"><h3>${cat}</h3>`;
       byCategory[cat].forEach(res => {
         html += `<div class="resource-card">
-          <h4>${escapeHtml(res.title)}</h4>
-          <p>${escapeHtml(res.content)}</p>
+          <h4>${res.title}</h4>
+          <p>${res.content.replace(/</g, '&lt;')}</p>
         </div>`;
       });
       html += `</div>`;
@@ -4286,11 +4478,11 @@
     mine.forEach(msg => {
       html += `<div class="message-item">
         <div class="msg-meta">You &middot; ${new Date(msg.created_at).toLocaleString()}</div>
-        <p class="msg-text">${escapeHtml(msg.message)}</p>`;
+        <p class="msg-text">${msg.message.replace(/</g, '&lt;')}</p>`;
       if (msg.reply) {
         html += `<div class="msg-reply">
           <div class="msg-meta">Dewey's Team &middot; ${new Date(msg.replied_at).toLocaleString()}</div>
-          <p class="msg-text">${escapeHtml(msg.reply)}</p>
+          <p class="msg-text">${msg.reply.replace(/</g, '&lt;')}</p>
         </div>`;
       }
       html += `</div>`;
