@@ -1207,60 +1207,6 @@
     font-weight: bold;
   }
 
-  .messages-thread {
-    max-height: 260px;
-    overflow-y: auto;
-    margin-bottom: 8px;
-  }
-
-  .message-item {
-    background: var(--panel-alt);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-  }
-
-  .message-item .msg-meta {
-    font-family: 'Public Sans', sans-serif;
-    font-size: 11px;
-    color: var(--ink-soft);
-    margin-bottom: 4px;
-  }
-
-  .message-item .msg-text {
-    font-family: 'Public Sans', sans-serif;
-    font-size: 14px;
-    color: var(--ink);
-    white-space: pre-wrap;
-    margin: 0;
-  }
-
-  .message-item .msg-reply {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed var(--line);
-  }
-
-  .message-item .msg-reply .msg-meta {
-    color: var(--gold);
-  }
-
-  .needs-reply-tag {
-    display: inline-block;
-    font-family: 'Public Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--gold);
-    border: 1px solid rgba(227,182,79,0.4);
-    border-radius: 10px;
-    padding: 1px 7px;
-    margin-left: 8px;
-    vertical-align: middle;
-  }
-
   .top-actions-row {
     max-width: 760px;
     margin: 0 auto 14px;
@@ -1346,10 +1292,6 @@
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 4h11l3 3v13H5V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10h7M9 14h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       Resources
     </button>
-    <button type="button" id="openMessagesBtn" class="messages-btn">
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      Messages
-    </button>
   </div>
 
   <div class="category" id="storeNameCard">
@@ -1371,6 +1313,16 @@
           <option value="weekly">Weekly Count</option>
           <option value="daily">Daily Count</option>
         </select>
+      </div>
+      <div class="item-row store-name-row" style="align-items:flex-start;">
+        <label class="item-name" for="storeLockboxInput">Lockbox Code <span class="optional-tag">(optional)</span></label>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="storeLockboxInput" class="store-name-input" placeholder="e.g. 4471" autocomplete="off" style="width:120px;max-width:120px;">
+            <button type="button" id="saveLockboxBtn" class="btn-secondary">Save</button>
+          </div>
+          <span id="storeLockboxStatus" style="font-family:'Public Sans', sans-serif; font-size:11px;"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -1428,7 +1380,6 @@
     <button type="button" class="tab-btn" id="accountsTabBtn">Store Accounts</button>
     <button type="button" class="tab-btn" id="catalogTabBtn">Catalog</button>
     <button type="button" class="tab-btn" id="routesTabBtn">Routes</button>
-    <button type="button" class="tab-btn" id="messagesTabBtn">Messages</button>
     <button type="button" class="tab-btn" id="compareTabBtn">Compare Items</button>
     <button type="button" class="tab-btn" id="resourcesTabBtn">Resources</button>
     <button type="button" class="tab-btn" id="emailTabBtn">Email</button>
@@ -1477,10 +1428,6 @@
     </div>
     <div class="modal-error" id="addRouteError"></div>
     <div id="routeStoresList"></div>
-  </div>
-
-  <div id="messagesPanel" class="tab-panel">
-    <div id="messagesList"></div>
   </div>
 
   <div id="comparePanel" class="tab-panel">
@@ -1593,37 +1540,6 @@
     <div class="modal-actions">
       <button type="button" id="editSubmissionCancelBtn" class="btn-secondary">Cancel</button>
       <button type="button" id="editSubmissionSaveBtn" class="btn-primary">Save Adjustment</button>
-    </div>
-  </div>
-</div>
-
-<!-- Reply to message modal (manager side) -->
-<div id="replyMessageOverlay" class="overlay">
-  <div class="modal" style="max-width:440px;">
-    <h2>Reply</h2>
-    <p class="modal-note" id="replyMessageStoreLabel"></p>
-    <textarea id="replyMessageInput" class="notes-input" rows="4" placeholder="Type your reply…"></textarea>
-    <div class="modal-error" id="replyMessageError"></div>
-    <div class="modal-actions">
-      <button type="button" id="replyMessageCancelBtn" class="btn-secondary">Cancel</button>
-      <button type="button" id="replyMessageSaveBtn" class="btn-primary">Send Reply</button>
-    </div>
-  </div>
-</div>
-
-<!-- Store-facing messages panel (store side) -->
-<div id="storeMessagesOverlay" class="overlay">
-  <div class="modal" style="max-width:480px;">
-    <h2>Messages</h2>
-    <p class="modal-note">Send a message to the Dewey's team, or check replies to messages you've already sent.</p>
-    <textarea id="newStoreMessageInput" class="notes-input" rows="3" placeholder="Type a message…"></textarea>
-    <div class="modal-error" id="storeMessageError"></div>
-    <div class="modal-actions" style="justify-content:flex-start;margin-bottom:14px;">
-      <button type="button" id="sendStoreMessageBtn" class="btn-primary">Send</button>
-    </div>
-    <div id="storeMessagesThread" class="messages-thread"></div>
-    <div class="modal-actions">
-      <button type="button" id="storeMessagesCloseBtn" class="btn-secondary">Close</button>
     </div>
   </div>
 </div>
@@ -1870,12 +1786,14 @@
           'Content-Type': 'application/json',
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=minimal'
+          'Prefer': 'return=representation'
         },
         body: JSON.stringify({ store_name: storeName, password: password, lockbox_code: lockboxCode || null })
       });
       if (!res.ok) return { ok: false, reason: 'error' };
-      return { ok: true };
+      const rows = await res.json();
+      const row = rows[0] || {};
+      return { ok: true, id: row.id, lockboxCode: row.lockbox_code };
     } catch (err) {
       return { ok: false, reason: 'error' };
     }
@@ -1887,7 +1805,7 @@
     const match = result.data.find(a => a.store_name.toLowerCase() === storeName.toLowerCase());
     if (!match) return { ok: false, reason: 'not_found' };
     if (match.password !== password) return { ok: false, reason: 'bad_password' };
-    return { ok: true, storeName: match.store_name };
+    return { ok: true, storeName: match.store_name, id: match.id, lockboxCode: match.lockbox_code };
   }
 
   async function updateAccountPassword(id, newPassword) {
@@ -2266,78 +2184,6 @@
     }
   }
 
-  // ---- Store <-> manager messages ----
-
-  async function fetchAllMessages() {
-    try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/store_messages?select=*&order=created_at.desc`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-          }
-        }
-      );
-      if (!res.ok) return { ok: false, data: [] };
-      const data = await res.json();
-      return { ok: true, data };
-    } catch (err) {
-      return { ok: false, data: [] };
-    }
-  }
-
-  async function sendMessage(storeName, messageText) {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ store_name: storeName, message: messageText })
-      });
-      return res.ok;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  async function replyToMessage(id, replyText) {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_messages?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ reply: replyText, replied_at: new Date().toISOString() })
-      });
-      return res.ok;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  async function deleteMessage(id) {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_messages?id=eq.${id}`, {
-        method: 'DELETE',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-        }
-      });
-      return res.ok;
-    } catch (err) {
-      return false;
-    }
-  }
-
   // ---- Categories ----
 
   async function fetchCategories() {
@@ -2466,6 +2312,7 @@
 
   // ---- Auth gate (login / create account) ----
   let currentStoreName = null;
+  let currentStoreAccountId = null;
   let authMode = 'login'; // 'login' | 'create'
 
   const authGate = document.getElementById('authGate');
@@ -2521,15 +2368,19 @@
     setAuthMode(authMode === 'login' ? 'create' : 'login');
   });
 
-  function enterApp(storeName) {
+  function enterApp(storeName, accountId, lockboxCode) {
     currentStoreName = storeName;
+    currentStoreAccountId = accountId || null;
     storeNameField.value = storeName;
+    storeLockboxInput.value = lockboxCode || '';
+    storeLockboxStatus.textContent = '';
     authGate.style.display = 'none';
     orderFormEl.style.display = '';
   }
 
   function exitToAuthGate() {
     currentStoreName = null;
+    currentStoreAccountId = null;
     authStoreNameInput.value = '';
     authPasswordInput.value = '';
     authConfirmPasswordInput.value = '';
@@ -2539,6 +2390,43 @@
     authGate.style.display = '';
     document.getElementById('summary').style.display = 'none';
   }
+
+  // ---- Store-facing lockbox code edit (Store Information card) ----
+  const storeLockboxInput = document.getElementById('storeLockboxInput');
+  const saveLockboxBtn = document.getElementById('saveLockboxBtn');
+  const storeLockboxStatus = document.getElementById('storeLockboxStatus');
+
+  saveLockboxBtn.addEventListener('click', async function() {
+    if (!currentStoreAccountId) {
+      storeLockboxStatus.style.color = 'var(--danger-soft)';
+      storeLockboxStatus.textContent = 'Could not identify your account — try switching accounts and logging back in.';
+      return;
+    }
+    const code = storeLockboxInput.value.trim();
+    saveLockboxBtn.disabled = true;
+    saveLockboxBtn.textContent = 'Saving…';
+    storeLockboxStatus.textContent = '';
+
+    const ok = await updateAccountLockbox(currentStoreAccountId, code);
+
+    saveLockboxBtn.disabled = false;
+    saveLockboxBtn.textContent = 'Save';
+
+    if (ok) {
+      storeLockboxStatus.style.color = 'var(--gold)';
+      storeLockboxStatus.textContent = 'Saved.';
+    } else {
+      storeLockboxStatus.style.color = 'var(--danger-soft)';
+      storeLockboxStatus.textContent = 'Could not save — check your connection and try again.';
+    }
+  });
+
+  storeLockboxInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveLockboxBtn.click();
+    }
+  });
 
   switchStoreBtn.addEventListener('click', exitToAuthGate);
 
@@ -2561,7 +2449,7 @@
       authActionBtn.textContent = originalLabel;
 
       if (result.ok) {
-        enterApp(result.storeName);
+        enterApp(result.storeName, result.id, result.lockboxCode);
       } else if (result.reason === 'not_found') {
         authError.textContent = 'No account found with that store name.';
       } else if (result.reason === 'bad_password') {
@@ -2590,7 +2478,7 @@
       authActionBtn.textContent = originalLabel;
 
       if (result.ok) {
-        enterApp(storeName);
+        enterApp(storeName, result.id, result.lockboxCode);
       } else if (result.reason === 'taken') {
         authError.textContent = 'That store name is already registered. Try logging in instead.';
       } else {
@@ -2840,7 +2728,6 @@
   const accountsTabBtn = document.getElementById('accountsTabBtn');
   const catalogTabBtn = document.getElementById('catalogTabBtn');
   const routesTabBtn = document.getElementById('routesTabBtn');
-  const messagesTabBtn = document.getElementById('messagesTabBtn');
   const compareTabBtn = document.getElementById('compareTabBtn');
   const resourcesTabBtn = document.getElementById('resourcesTabBtn');
   const emailTabBtn = document.getElementById('emailTabBtn');
@@ -2848,7 +2735,6 @@
   const accountsPanel = document.getElementById('accountsPanel');
   const catalogPanel = document.getElementById('catalogPanel');
   const routesPanel = document.getElementById('routesPanel');
-  const messagesPanel = document.getElementById('messagesPanel');
   const comparePanel = document.getElementById('comparePanel');
   const resourcesPanel = document.getElementById('resourcesPanel');
   const emailPanel = document.getElementById('emailPanel');
@@ -2859,7 +2745,6 @@
     { key: 'accounts', btn: accountsTabBtn, panel: accountsPanel, render: renderAccounts },
     { key: 'catalog', btn: catalogTabBtn, panel: catalogPanel, render: renderCatalogManager },
     { key: 'routes', btn: routesTabBtn, panel: routesPanel, render: function() { renderRoutesTab('all'); } },
-    { key: 'messages', btn: messagesTabBtn, panel: messagesPanel, render: renderMessagesTab },
     { key: 'compare', btn: compareTabBtn, panel: comparePanel, render: renderCompareTab },
     { key: 'resources', btn: resourcesTabBtn, panel: resourcesPanel, render: renderResourcesTab },
     { key: 'email', btn: emailTabBtn, panel: emailPanel, render: renderEmailTab }
@@ -2883,7 +2768,6 @@
   accountsTabBtn.addEventListener('click', function() { switchDashboardTab('accounts'); });
   catalogTabBtn.addEventListener('click', function() { switchDashboardTab('catalog'); });
   routesTabBtn.addEventListener('click', function() { switchDashboardTab('routes'); });
-  messagesTabBtn.addEventListener('click', function() { switchDashboardTab('messages'); });
   compareTabBtn.addEventListener('click', function() { switchDashboardTab('compare'); });
   resourcesTabBtn.addEventListener('click', function() { switchDashboardTab('resources'); });
   emailTabBtn.addEventListener('click', function() { switchDashboardTab('email'); });
@@ -4340,128 +4224,6 @@
     if (e.target === managerOverlay) closeManagerOverlay();
   });
 
-  // ---- Messages tab (manager side) ----
-  async function renderMessagesTab() {
-    const listEl = document.getElementById('messagesList');
-    listEl.innerHTML = '<p class="no-submissions">Loading messages…</p>';
-
-    const result = await fetchAllMessages();
-    if (!result.ok) {
-      listEl.innerHTML = '<p class="no-submissions">Could not load messages. Check your connection and reopen this tab.</p>';
-      return;
-    }
-
-    if (result.data.length === 0) {
-      listEl.innerHTML = '<p class="no-submissions">No messages yet.</p>';
-      return;
-    }
-
-    let html = '';
-    result.data.forEach(msg => {
-      const needsReplyTag = !msg.reply ? '<span class="needs-reply-tag">Needs Reply</span>' : '';
-      html += `<div class="submission-card">
-        <div class="sub-header">
-          <span class="store-title">${msg.store_name} ${needsReplyTag}</span>
-          <span class="timestamp">${new Date(msg.created_at).toLocaleString()}</span>
-        </div>
-        <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${msg.message.replace(/</g, '&lt;')}</p>`;
-      if (msg.reply) {
-        html += `<div class="msg-reply">
-          <span class="msg-meta">Reply sent ${new Date(msg.replied_at).toLocaleString()}</span>
-          <p class="msg-text" style="font-family:'Public Sans', sans-serif; font-size:14px; white-space:pre-wrap;">${msg.reply.replace(/</g, '&lt;')}</p>
-        </div>`;
-      }
-      html += `<div class="account-actions" style="margin-top:10px;">
-        <button type="button" class="btn-secondary reply-msg-btn" data-id="${msg.id}" data-name="${msg.store_name}">${msg.reply ? 'Edit Reply' : 'Reply'}</button>
-        <button type="button" class="btn-secondary danger-link delete-message-btn" data-id="${msg.id}" data-name="${msg.store_name}">Delete</button>
-      </div>
-      </div>`;
-    });
-
-    listEl.innerHTML = html;
-
-    listEl.querySelectorAll('.reply-msg-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        openReplyMessage(btn.dataset.id, btn.dataset.name);
-      });
-    });
-
-    listEl.querySelectorAll('.delete-message-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const id = btn.dataset.id;
-        const name = btn.dataset.name;
-        openConfirm(
-          'Delete Message',
-          `This will permanently delete this message from "${name}", including any reply. This cannot be undone.`,
-          async function() {
-            const ok = await deleteMessage(id);
-            if (ok) {
-              renderMessagesTab();
-            } else {
-              listEl.insertAdjacentHTML('afterbegin', '<p class="no-submissions">Could not delete — check your connection and try again.</p>');
-            }
-          }
-        );
-      });
-    });
-  }
-
-  const replyMessageOverlay = document.getElementById('replyMessageOverlay');
-  const replyMessageStoreLabel = document.getElementById('replyMessageStoreLabel');
-  const replyMessageInput = document.getElementById('replyMessageInput');
-  const replyMessageError = document.getElementById('replyMessageError');
-  const replyMessageCancelBtn = document.getElementById('replyMessageCancelBtn');
-  const replyMessageSaveBtn = document.getElementById('replyMessageSaveBtn');
-  let pendingReplyMessageId = null;
-
-  function openReplyMessage(id, storeName) {
-    pendingReplyMessageId = id;
-    replyMessageStoreLabel.textContent = `Replying to "${storeName}".`;
-    replyMessageInput.value = '';
-    replyMessageError.textContent = '';
-    replyMessageOverlay.classList.add('active');
-    setTimeout(() => replyMessageInput.focus(), 50);
-  }
-
-  function closeReplyMessage() {
-    replyMessageOverlay.classList.remove('active');
-    pendingReplyMessageId = null;
-  }
-
-  replyMessageCancelBtn.addEventListener('click', closeReplyMessage);
-  replyMessageOverlay.addEventListener('click', function(e) {
-    if (e.target === replyMessageOverlay) closeReplyMessage();
-  });
-
-  replyMessageSaveBtn.addEventListener('click', async function() {
-    const text = replyMessageInput.value.trim();
-    if (!text) {
-      replyMessageError.textContent = 'Enter a reply before sending.';
-      return;
-    }
-    replyMessageSaveBtn.disabled = true;
-    replyMessageSaveBtn.textContent = 'Sending…';
-    const ok = await replyToMessage(pendingReplyMessageId, text);
-    replyMessageSaveBtn.disabled = false;
-    replyMessageSaveBtn.textContent = 'Send Reply';
-
-    if (ok) {
-      closeReplyMessage();
-      renderMessagesTab();
-    } else {
-      replyMessageError.textContent = 'Could not send reply. Check your connection and try again.';
-    }
-  });
-
-  // ---- Store-facing messages panel ----
-  const openMessagesBtn = document.getElementById('openMessagesBtn');
-  const storeMessagesOverlay = document.getElementById('storeMessagesOverlay');
-  const storeMessagesThread = document.getElementById('storeMessagesThread');
-  const newStoreMessageInput = document.getElementById('newStoreMessageInput');
-  const storeMessageError = document.getElementById('storeMessageError');
-  const sendStoreMessageBtn = document.getElementById('sendStoreMessageBtn');
-  const storeMessagesCloseBtn = document.getElementById('storeMessagesCloseBtn');
-
   // ---- Store-facing Resources page (full page) ----
   const openResourcesBtn = document.getElementById('openResourcesBtn');
   const storeResourcesPage = document.getElementById('storeResourcesPage');
@@ -4514,70 +4276,6 @@
 
   openResourcesBtn.addEventListener('click', openStoreResourcesPage);
   storeResourcesCloseBtn.addEventListener('click', closeStoreResourcesPage);
-
-  async function loadStoreMessages() {
-    storeMessagesThread.innerHTML = '<p class="no-submissions">Loading messages…</p>';
-    const result = await fetchAllMessages();
-    if (!result.ok) {
-      storeMessagesThread.innerHTML = '<p class="no-submissions">Could not load messages. Check your connection.</p>';
-      return;
-    }
-    const mine = result.data.filter(m => m.store_name === currentStoreName);
-    if (mine.length === 0) {
-      storeMessagesThread.innerHTML = '<p class="no-submissions">No messages yet.</p>';
-      return;
-    }
-    let html = '';
-    mine.forEach(msg => {
-      html += `<div class="message-item">
-        <div class="msg-meta">You &middot; ${new Date(msg.created_at).toLocaleString()}</div>
-        <p class="msg-text">${msg.message.replace(/</g, '&lt;')}</p>`;
-      if (msg.reply) {
-        html += `<div class="msg-reply">
-          <div class="msg-meta">Dewey's Team &middot; ${new Date(msg.replied_at).toLocaleString()}</div>
-          <p class="msg-text">${msg.reply.replace(/</g, '&lt;')}</p>
-        </div>`;
-      }
-      html += `</div>`;
-    });
-    storeMessagesThread.innerHTML = html;
-  }
-
-  openMessagesBtn.addEventListener('click', function() {
-    storeMessageError.textContent = '';
-    newStoreMessageInput.value = '';
-    storeMessagesOverlay.classList.add('active');
-    loadStoreMessages();
-  });
-
-  storeMessagesCloseBtn.addEventListener('click', function() {
-    storeMessagesOverlay.classList.remove('active');
-  });
-
-  storeMessagesOverlay.addEventListener('click', function(e) {
-    if (e.target === storeMessagesOverlay) storeMessagesOverlay.classList.remove('active');
-  });
-
-  sendStoreMessageBtn.addEventListener('click', async function() {
-    const text = newStoreMessageInput.value.trim();
-    if (!text) {
-      storeMessageError.textContent = 'Type a message before sending.';
-      return;
-    }
-    sendStoreMessageBtn.disabled = true;
-    sendStoreMessageBtn.textContent = 'Sending…';
-    const ok = await sendMessage(currentStoreName, text);
-    sendStoreMessageBtn.disabled = false;
-    sendStoreMessageBtn.textContent = 'Send';
-
-    if (ok) {
-      newStoreMessageInput.value = '';
-      storeMessageError.textContent = '';
-      loadStoreMessages();
-    } else {
-      storeMessageError.textContent = 'Could not send message. Check your connection and try again.';
-    }
-  });
 
   // Kick off catalog loading now that every function and constant above is defined
   loadCatalog();
