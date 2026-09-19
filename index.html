@@ -905,6 +905,45 @@
     border-color: rgba(207,122,60,0.45);
   }
 
+  .count-type-toggle {
+    display: inline-flex;
+    background: var(--input-bg);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .count-type-option {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: none;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .count-type-option:hover:not(.active) {
+    color: var(--accent-soft);
+  }
+
+  .count-type-option.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  @media (max-width: 480px) {
+    .count-type-option {
+      font-size: 12px;
+      padding: 7px 11px;
+    }
+  }
+
   .summary-notes {
     margin-top: 14px;
     padding-top: 10px;
@@ -1323,8 +1362,12 @@
         <input type="text" id="storeName" name="storeName" class="store-name-input" readonly>
       </div>
       <div class="item-row store-name-row">
-        <label class="item-name" for="countType">Submitting</label>
-        <select id="countType" name="countType" class="store-name-input">
+        <label class="item-name">Submitting</label>
+        <div class="count-type-toggle" role="group" aria-label="Submission type">
+          <button type="button" class="count-type-option active" data-value="weekly">Weekly Count</button>
+          <button type="button" class="count-type-option" data-value="daily">Daily Count</button>
+        </div>
+        <select id="countType" name="countType" style="display:none;" aria-hidden="true">
           <option value="weekly">Weekly Count</option>
           <option value="daily">Daily Count</option>
         </select>
@@ -2440,6 +2483,16 @@
   const orderFormEl = document.getElementById('orderForm');
   const storeNameField = document.getElementById('storeName');
   const switchStoreBtn = document.getElementById('switchStoreBtn');
+
+  // Count-type toggle (Weekly/Daily) — mirrors its value onto the hidden #countType select
+  const countTypeSelectEl = document.getElementById('countType');
+  document.querySelectorAll('.count-type-option').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.count-type-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      countTypeSelectEl.value = btn.dataset.value;
+    });
+  });
 
   function setAuthMode(mode) {
     authMode = mode;
